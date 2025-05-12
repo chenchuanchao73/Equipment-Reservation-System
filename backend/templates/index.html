@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 设备预定系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <h2 class="mb-4">欢迎使用设备预定系统</h2>
+        <p class="lead mb-5">这是一个简单易用的设备预定系统，您可以在这里预定学校IT部门的各种设备。</p>
+        
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-calendar-plus display-1 text-primary mb-3"></i>
+                        <h3>预定设备</h3>
+                        <p>浏览并预定可用的设备</p>
+                        <a href="/equipment" class="btn btn-primary">开始预定</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-search display-1 text-success mb-3"></i>
+                        <h3>查询预定</h3>
+                        <p>查询、修改或取消您的预定</p>
+                        <a href="/reservation/query" class="btn btn-success">查询预定</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card bg-light">
+            <div class="card-body">
+                <h4>使用说明</h4>
+                <ol class="text-start">
+                    <li>浏览可用设备并选择您需要的设备</li>
+                    <li>选择预定时间段</li>
+                    <li>填写您的个人信息</li>
+                    <li>提交预定申请</li>
+                    <li>记录预定码，用于后续查询或取消预定</li>
+                </ol>
+                <p class="mb-0">如有任何问题，请联系IT部门。</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

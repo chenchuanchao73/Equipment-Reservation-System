@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备预定更新通知</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .reservation-details {
+            background-color: #f5f7fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .reservation-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .reservation-details table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .reservation-details table td:first-child {
+            font-weight: bold;
+            width: 40%;
+        }
+        .button {
+            display: inline-block;
+            background-color: #409EFF;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 12px;
+        }
+        .highlight {
+            background-color: #fff7e6;
+            border-left: 4px solid #e6a23c;
+            padding: 10px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://htnia.com/logo.png" alt="HTNIA Logo" class="logo">
+            <h1>设备预定更新通知</h1>
+        </div>
+        
+        <div class="content">
+            <p>尊敬的 {{ user_name }}，</p>
+            
+            <p>您的设备预定信息已更新。以下是更新后的预定详情：</p>
+            
+            <div class="reservation-details">
+                <table>
+                    <tr>
+                        <td>预定编号：</td>
+                        <td>{{ reservation_code }}</td>
+                    </tr>
+                    <tr>
+                        <td>设备名称：</td>
+                        <td>{{ equipment_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>开始时间：</td>
+                        <td>{{ start_datetime }}</td>
+                    </tr>
+                    <tr>
+                        <td>结束时间：</td>
+                        <td>{{ end_datetime }}</td>
+                    </tr>
+                    <tr>
+                        <td>状态：</td>
+                        <td>{{ status }}</td>
+                    </tr>
+                    <tr>
+                        <td>更新时间：</td>
+                        <td>{{ updated_at }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="highlight">
+                <p>请注意预定信息的变更，如有疑问，请联系管理员。</p>
+            </div>
+            
+            <p>您可以随时通过预定系统查询您的预定详情。</p>
+            
+            <p>感谢您使用HTNIA设备预定系统！</p>
+        </div>
+        
+        <div class="footer">
+            <p>此邮件由系统自动发送，请勿回复。</p>
+            <p>&copy; {{ current_year }} HTNIA. 保留所有权利。</p>
+        </div>
+    </div>
+</body>
+</html>

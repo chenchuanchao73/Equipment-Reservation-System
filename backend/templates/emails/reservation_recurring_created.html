@@ -1,0 +1,15 @@
+                                <html><head><meta charset="UTF-8"><title>循环预约创建成功 / Recurring Reservation Created</title></head><body>
+                                <h2>循环预约创建成功 / Recurring Reservation Created</h2>
+                                <p>尊敬的 {{ reservation.user_name }}，您的循环设备预约已成功创建。<br>
+                                Dear {{ reservation.user_name }}, your recurring equipment reservation has been created successfully.</p>
+                                <table border="1" cellpadding="6" style="border-collapse:collapse;">
+                                <tr><th>预约编号 / Reservation Code</th><td>{{ reservation.reservation_code }}</td></tr>
+                                <tr><th>设备名称 / Equipment Name</th><td>{{ reservation.equipment_name }}</td></tr>
+                                <tr><th>预约时间范围 / Reservation Date Range</th><td>{{ reservation.start_date }} ~ {{ reservation.end_date }}</td></tr>
+                                <tr><th>重复规则 / Recurrence Rule</th><td>{{ reservation.recurrence_rule }}</td></tr>
+                                <tr><th>每天预约时间 / Time Each Day</th><td>{{ reservation.start_time }} ~ {{ reservation.end_time }}</td></tr>
+                                <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+                                </table>
+                                <p>如有任何问题，请联系管理员。<br>
+                                If you have any questions, please contact the administrator.</p>
+                                </body></html> 

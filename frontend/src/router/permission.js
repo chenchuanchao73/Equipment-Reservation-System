@@ -1,0 +1,59 @@
+import router from './index'
+import store from '@/store'
+import { Message } from 'element-ui'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+
+// 配置NProgress
+NProgress.configure({ showSpinner: false })
+
+// 白名单路由（不需要登录即可访问）
+const whiteList = [
+  '/',
+  '/equipment',
+  '/equipment/:id',
+  '/reservation/query',
+  '/reservation/:code',
+  '/admin/login',
+  '/404'
+]
+
+// 路由前置守卫
+router.beforeEach((to, from, next) => {
+  // 开始进度条
+  NProgress.start()
+
+  // 设置页面标题
+  document.title = to.meta.title ? `${to.meta.title} - HTNIA设备预定系统` : 'HTNIA设备预定系统'
+
+  // 获取用户登录状态
+  const hasToken = store.getters.isLoggedIn
+
+  // 判断是否需要登录权限
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+
+  // 如果是登录页面且已登录，直接跳转到首页
+  if (to.path === '/admin/login' && hasToken) {
+    next('/admin/dashboard')
+    NProgress.done()
+    return
+  }
+
+  // 如果需要登录权限但未登录，跳转到登录页
+  if (requiresAuth && !hasToken) {
+    next(`/admin/login?redirect=${to.path}`)
+    NProgress.done()
+    return
+  }
+
+  // 其他情况直接放行
+  next()
+})
+
+// 路由后置守卫
+router.afterEach(() => {
+  // 结束进度条
+  NProgress.done()
+})
+
+export default router

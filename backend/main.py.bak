@@ -1,0 +1,174 @@
+"""
+物品预定系统主应用入口
+Equipment Reservation System main application entry
+"""
+import logging
+import os
+from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+import sys
+from contextlib import asynccontextmanager
+import uvicorn
+import asyncio
+from datetime import datetime, timedelta
+
+# 添加项目根目录到Python路径
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
+
+# 导入配置和模块
+from config import TEMPLATES_DIR, STATIC_DIR, APP_NAME, DEFAULT_LANGUAGE
+from backend.database import init_db, get_db
+from backend.i18n import setup_i18n, get_locale, I18nMiddleware
+from backend.utils.status_updater import update_reservation_statuses
+
+# 确保日志目录存在
+logs_dir = os.path.join(project_root, "logs")
+if not os.path.exists(logs_dir):
+    os.makedirs(logs_dir)
+
+# 设置日志
+logging.basicConfig(
+    level=logging.DEBUG,  # 将日志级别从INFO改为DEBUG，以显示更多调试信息
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(os.path.join(logs_dir, "app.log")),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# 定义状态更新任务
+async def status_update_task():
+    """定期更新预约状态的后台任务"""
+    while True:
+        logger.info("执行预约状态更新任务")
+        db = None
+        try:
+            # 获取数据库会话
+            db = next(get_db())
+            # 更新预约状态
+            update_reservation_statuses(db)
+        except Exception as e:
+            logger.error(f"更新预约状态时出错: {str(e)}")
+        finally:
+            # 确保数据库连接被关闭
+            if db:
+                db.close()
+
+        # 每1分钟执行一次
+        await asyncio.sleep(60)
+
+# 定义生命周期管理器
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动时执行
+    logger.info("应用启动 / Application started")
+    await init_db()
+
+    # 启动状态更新后台任务
+    task = asyncio.create_task(status_update_task())
+
+    yield
+
+    # 关闭时执行
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        logger.info("状态更新任务已取消")
+
+    logger.info("应用关闭 / Application shut down")
+
+# 创建FastAPI应用
+app = FastAPI(
+    title=APP_NAME[DEFAULT_LANGUAGE],
+    description="设备预定系统 / Equipment Reservation System",
+    lifespan=lifespan
+)
+
+# 设置CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 设置国际化中间件
+setup_i18n()
+app.add_middleware(I18nMiddleware)
+
+# 设置静态文件
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+# 设置模板
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
+templates.env.globals["get_locale"] = get_locale
+
+# 导入路由模块
+from backend.routes.equipment import router as equipment_router
+from backend.routes.equipment_category import router as equipment_category_router
+from backend.routes.reservation import router as reservation_router
+from backend.routes.recurring_reservation import router as recurring_reservation_router
+from backend.routes.admin import router as admin_router
+from backend.routes.statistics import router as statistics_router
+from backend.routes.upload import router as upload_router
+from backend.routes.calendar import router as calendar_router
+
+# 注册路由
+app.include_router(equipment_router)
+app.include_router(equipment_category_router)
+app.include_router(reservation_router)
+app.include_router(recurring_reservation_router)
+app.include_router(admin_router)
+app.include_router(statistics_router)
+app.include_router(upload_router)
+app.include_router(calendar_router)
+
+@app.get("/")
+def root(request: Request):
+    """
+    首页路由
+    Home page route
+    """
+    return templates.TemplateResponse(
+        "index.html",
+        {"request": request}
+    )
+
+@app.get("/api/health")
+def health_check():
+    """
+    健康检查端点
+    Health check endpoint
+    """
+    try:
+        # 简单返回健康状态，不进行数据库检查
+        return {
+            "status": "ok",
+            "message": "Service is healthy",
+            "version": "1.0.0"
+        }
+    except Exception as e:
+        logger.error(f"健康检查失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"健康检查失败: {str(e)}")
+
+@app.get("/language/{lang}")
+def change_language(lang: str):
+    """
+    切换语言
+    Change language
+    """
+    response = RedirectResponse(url="/")
+    response.set_cookie(key="language", value=lang)
+    return response
+
+# 当直接运行此文件时启动服务器
+if __name__ == "__main__":
+    # 启动服务器，绑定到所有网络接口
+    uvicorn.run(app, host="0.0.0.0", port=8000)

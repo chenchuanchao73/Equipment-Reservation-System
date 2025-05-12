@@ -1,0 +1,16 @@
+
+                            <!DOCTYPE html>
+                            <html><head><meta charset="UTF-8"><title>单次预约创建 / Single Reservation Created</title></head><body>
+                            <h2>单次预约创建成功 / Single Reservation Created</h2>
+                            <p>尊敬的 {{ reservation.user_name }}，您的设备预约已成功创建。<br>
+                            Dear {{ reservation.user_name }}, your equipment reservation has been created successfully.</p>
+                            <table border=1 cellpadding=6>
+                                <tr><th>预约编号 / Reservation Code</th><td>{{ reservation.reservation_code }}</td></tr>
+                                <tr><th>设备名称 / Equipment Name</th><td>{{ reservation.equipment_name }}</td></tr>
+                                <tr><th>开始时间 / Start Time</th><td>{{ reservation.start_datetime }}</td></tr>
+                                <tr><th>结束时间 / End Time</th><td>{{ reservation.end_datetime }}</td></tr>
+                                <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+                            </table>
+                            <p>如有任何问题，请联系管理员。<br>If you have any questions, please contact the administrator.</p>
+                            </body></html>
+                            

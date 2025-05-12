@@ -1,0 +1,16 @@
+                                <!DOCTYPE html>
+                                <html><head><meta charset="UTF-8"><title>循环子预约取消 / Recurring Child Reservation Cancelled</title></head><body>
+                                <h2>循环预约子预约取消 / Recurring Child Reservation Cancelled</h2>
+                                <p style='color:#d9534f;font-weight:bold;'>您本次取消的是循环预约中的某一次子预约（见下方详细信息）<br>
+                                This cancellation is for a single occurrence of your recurring reservation (see details below)</p>
+                                <h3>本次子预约信息 / This Occurrence</h3>
+                                <table border=1 cellpadding=6>
+                                    <tr><th>预约编号 / Reservation Code</th><td>{{ reservation.reservation_code }}</td></tr>
+                                    <tr><th>设备名称 / Equipment Name</th><td>{{ reservation.equipment_name }}</td></tr>
+                                    <tr><th>开始时间 / Start Time</th><td>{{ reservation.start_datetime }}</td></tr>
+                                    <tr><th>结束时间 / End Time</th><td>{{ reservation.end_datetime }}</td></tr>
+                                    <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+                                </table>
+                                <p>如有任何问题，请联系管理员。<br>If you have any questions, please contact the administrator.</p>
+                                </body></html>
+                                

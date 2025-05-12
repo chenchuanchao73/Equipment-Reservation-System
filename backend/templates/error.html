@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}错误 - 设备预定系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h2 class="mb-0">出错了</h2>
+            </div>
+            <div class="card-body">
+                <i class="bi bi-exclamation-triangle display-1 text-danger mb-4"></i>
+                <h3 class="mb-3">{{ error }}</h3>
+                <p class="mb-4">很抱歉，处理您的请求时出现了错误。</p>
+                <a href="/" class="btn btn-primary">返回首页</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
