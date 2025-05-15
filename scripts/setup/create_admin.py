@@ -33,7 +33,7 @@ def create_default_admin():
     # 导入所有模型以确保它们被注册到Base中
     from backend.models.equipment import Equipment
     from backend.models.reservation import Reservation
-    from backend.models.admin import Admin, SystemSettings
+    from backend.models.admin import Admin
 
     # 创建所有表
     Base.metadata.create_all(bind=engine)

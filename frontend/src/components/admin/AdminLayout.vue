@@ -1,7 +1,9 @@
 <template>
   <div class="admin-layout">
+    <!-- 移动端菜单按钮，放在最外层，避免被父容器裁剪，仅在移动端显示 -->
+    <div class="admin-mobile-nav-toggle" @click="toggleSidebar"></div>
     <el-container>
-      <el-aside width="220px" class="admin-sidebar">
+      <el-aside width="220px" class="admin-sidebar" :class="{ collapsed: sidebarCollapsed }">
         <div class="sidebar-header">
           <img src="@/assets/logo.png" alt="Logo" class="sidebar-logo" />
           <span class="sidebar-title">{{ $t('admin.adminPanel') }}</span>
@@ -140,7 +142,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 .admin-layout {
   height: 100vh;
   overflow: hidden;
@@ -244,6 +246,35 @@ export default {
   
   .sidebar-title {
     display: none;
+  }
+  
+  .admin-mobile-nav-toggle {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    left: auto;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #409EFF;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 3000;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  }
+  .admin-mobile-nav-toggle:before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 24px;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="white" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M160 512a32 32 0 0 1 32-32h640a32 32 0 0 1 0 64H192a32 32 0 0 1-32-32zm0-192a32 32 0 0 1 32-32h640a32 32 0 0 1 0 64H192a32 32 0 0 1-32-32zm32 288a32 32 0 0 0 0 64h640a32 32 0 0 0 0-64H192z"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin: auto;
   }
 }
 </style>

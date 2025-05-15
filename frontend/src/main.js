@@ -8,7 +8,10 @@ import VueI18n from 'vue-i18n'
 import axios from 'axios'
 import enLocale from 'element-ui/lib/locale/lang/en'
 import zhLocale from 'element-ui/lib/locale/lang/zh-CN'
+import Router from 'vue-router'
 
+// Import API
+import * as api from './api'
 
 // 导入权限控制
 import './router/permission'
@@ -28,8 +31,28 @@ import en from './locales/en'
 Vue.use(VueI18n)
 // Vue.use(VueQuillEditor) // 暂时注释掉
 
+// === 在应用初始化时同步 token 和 user 到 Vuex ===
+const token = localStorage.getItem('token')
+if (token) store.commit('SET_TOKEN', token)
+const user = localStorage.getItem('user')
+if (user) store.commit('SET_USER', JSON.parse(user))
+
 // 配置axios
-axios.defaults.baseURL = process.env.VUE_APP_API_URL || 'http://localhost:8000'
+// 动态获取API基础URL
+const getApiBaseUrl = () => {
+  // 如果是开发环境，使用当前主机名但端口改为8000
+  const currentHost = window.location.hostname
+  const apiUrl = `http://${currentHost}:8000`
+
+  // 添加额外的调试信息
+  console.log('Current hostname:', currentHost)
+  console.log('Generated API URL:', apiUrl)
+
+  return apiUrl
+}
+
+// 设置axios基础URL
+axios.defaults.baseURL = getApiBaseUrl()
 // 增加超时时间到 30 秒
 axios.defaults.timeout = 30000
 // 添加调试日志
@@ -48,6 +71,12 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(response => {
   return response
 }, error => {
+  // 添加详细日志，排查 401 和异常来源
+  console.error('AXIOS ERROR:', error)
+  if (error.response) {
+    console.error('AXIOS ERROR RESPONSE:', error.response)
+    console.error('AXIOS ERROR URL:', error.config && error.config.url)
+  }
   if (error.response) {
     // 处理401错误（会话过期）
     if (error.response.status === 401) {
@@ -113,6 +142,24 @@ Vue.filter('dateFormat', function(value, format = 'YYYY-MM-DD HH:mm') {
 })
 
 Vue.config.productionTip = false
+
+const originalPush = Router.prototype.push
+Router.prototype.push = function push(location, onResolve, onReject) {
+  if (onResolve || onReject) return originalPush.call(this, location, onResolve, onReject)
+  return originalPush.call(this, location).catch(err => {
+    if (
+      err.name === 'NavigationDuplicated' ||
+      err.message.includes('Redirected when going')
+    ) {
+      // 忽略重复导航和重定向警告
+      return
+    }
+    throw err
+  })
+}
+
+// 全局注册API对象
+Vue.prototype.$api = api.api
 
 new Vue({
   router,

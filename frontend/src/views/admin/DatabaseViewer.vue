@@ -117,6 +117,13 @@ export default {
         'admin.is_active': '账号是否激活（1激活，0禁用）',
         'admin.created_at': '账号创建时间',
 
+        // announcements表：公告表
+        'announcements.id': '公告ID',
+        'announcements.title': '公告标题',
+        'announcements.content': '公告内容',
+        'announcements.created_at': '公告创建（发布）时间',
+        'announcements.is_active': '公告是否启用',
+
         // email_logs表：系统邮件发送日志
         'email_logs.id': '日志唯一ID',
         'email_logs.recipient': '收件人邮箱',

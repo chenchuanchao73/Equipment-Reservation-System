@@ -10,57 +10,28 @@ import logging
 import uvicorn
 from pathlib import Path
 from dotenv import load_dotenv
+import socket
+import asyncio
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).resolve().parent
 sys.path.append(str(project_root))
 
+# 导入新的日志配置
+from log_config import setup_logging, check_log_file, backup_logs, force_log_rotation
+
 # 加载环境变量
 load_dotenv()
 
-# 确保日志目录存在
-logs_dir = os.path.join(project_root, "logs")
-if not os.path.exists(logs_dir):
-    os.makedirs(logs_dir)
-
-# 设置日志
-log_file = os.path.join(logs_dir, "app.log")
-
-# 配置根日志记录器
-# 创建日志格式化器
-log_formatter = logging.Formatter(
-    "%(asctime)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-
-# 创建按天轮转的文件处理器
-file_handler = logging.handlers.TimedRotatingFileHandler(
-    log_file,
-    when="midnight",  # 每天午夜轮转
-    interval=1,       # 每1天轮转一次
-    backupCount=30,   # 保留30天的日志
-    encoding="utf-8"
-)
-# 设置日志文件后缀为日期格式
-file_handler.suffix = "%Y-%m-%d"
-file_handler.setFormatter(log_formatter)
-
-# 创建控制台处理器
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(log_formatter)
-
-# 配置根日志记录器
-logging.basicConfig(
-    level=logging.INFO,
-    handlers=[file_handler, console_handler]
-)
+# 设置新的日志系统
+logger, log_handler = setup_logging()
+check_log_file()
+logger.info("设备预定系统启动中...")
 
 # 禁用其他日志记录器的传播，避免重复日志
 logging.getLogger("uvicorn").propagate = False
 logging.getLogger("uvicorn.error").propagate = False
 logging.getLogger("uvicorn.access").propagate = False
-
-logger = logging.getLogger(__name__)
 
 def check_dependencies():
     """检查依赖是否已安装"""
@@ -72,11 +43,31 @@ def check_dependencies():
         import jinja2
         import aiofiles
         import i18n
+        from concurrent_log_handler import ConcurrentTimedRotatingFileHandler
         return True
     except ImportError as e:
         logger.error(f"缺少依赖: {e}")
-        logger.info("请运行 'pip install -r requirements.txt' 安装所需依赖")
+        logger.info("请运行 'pip install -r requirements.txt 和 pip install -r requirements_for_logging.txt' 安装所需依赖")
         return False
+
+# 日志维护任务
+async def log_maintenance_task():
+    """周期性日志维护任务"""
+    try:
+        while True:
+            # 每小时执行一次
+            await asyncio.sleep(3600)  # 3600秒 = 1小时
+            
+            logger.info("执行日志维护任务")
+            
+            # 检查日志文件
+            check_log_file()
+            
+            # 备份日志
+            backup_logs()
+            
+    except Exception as e:
+        logger.error(f"日志维护任务异常: {e}", exc_info=True)
 
 def main():
     """主函数"""
@@ -89,6 +80,10 @@ def main():
 
     # 获取端口
     port = int(os.getenv("PORT", "8000"))
+
+    # 获取本机IP地址
+    hostname = socket.gethostname()
+    ip_address = socket.gethostbyname(hostname)
 
     # 打开浏览器
     def open_browser():
@@ -103,11 +98,20 @@ def main():
     browser_thread.daemon = True
     browser_thread.start()
 
+    # 启动日志维护任务
+    async def start_log_task():
+        asyncio.create_task(log_maintenance_task())
+        
+    # 执行日志任务
+    asyncio.run(start_log_task())
+
+    logger.info(f"应用程序将在 http://localhost:{port} 启动")
+    logger.info(f"局域网可通过 http://{ip_address}:{port} 访问")
     print(f"应用程序将在 http://localhost:{port} 启动")
+    print(f"局域网可通过 http://{ip_address}:{port} 访问")
     print("按Ctrl+C可以停止应用程序")
 
-    # 启动应用，使用我们自己的日志配置
-    # 创建一个日志配置，使用TimedRotatingFileHandler按天轮转日志
+    # 使用新的日志配置启动uvicorn
     log_config = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -124,17 +128,11 @@ def main():
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stderr",
             },
-            "file": {
-                "formatter": "default",
-                "class": "logging.FileHandler",
-                "filename": log_file,
-                "encoding": "utf-8",
-            },
         },
         "loggers": {
-            "uvicorn": {"handlers": ["default", "file"], "level": "INFO", "propagate": False},
-            "uvicorn.error": {"handlers": ["default", "file"], "level": "INFO", "propagate": False},
-            "uvicorn.access": {"handlers": ["default", "file"], "level": "INFO", "propagate": False},
+            "uvicorn": {"handlers": ["default"], "level": "INFO", "propagate": False},
+            "uvicorn.error": {"handlers": ["default"], "level": "INFO", "propagate": False},
+            "uvicorn.access": {"handlers": ["default"], "level": "INFO", "propagate": False},
         },
     }
 
@@ -146,6 +144,10 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("\n应用程序已停止")
+        logger.info("应用程序已停止")
+        # 关闭日志处理器
+        for handler in logger.handlers:
+            handler.close()
     except Exception as e:
-        logger.error(f"应用程序启动失败: {e}")
+        logger.error(f"应用程序启动失败: {e}", exc_info=True)
         input("\n按Enter键退出...")

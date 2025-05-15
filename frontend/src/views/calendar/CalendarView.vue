@@ -21,6 +21,28 @@
           </div>
         </el-col>
       </el-row>
+
+      <!-- 设备筛选器 -->
+      <el-row :gutter="20" class="filter-row">
+        <el-col :span="24">
+          <div class="equipment-filter">
+            <el-select
+              v-model="selectedEquipment"
+              :placeholder="$t('calendar.selectEquipment')"
+              clearable
+              @change="handleEquipmentChange"
+              style="width: 300px;"
+            >
+              <el-option
+                v-for="item in equipmentList"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              ></el-option>
+            </el-select>
+          </div>
+        </el-col>
+      </el-row>
     </div>
 
     <FullCalendar
@@ -111,6 +133,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/vue';
 import { formatDate } from '@/utils/date';
 import reservationApi from '@/api/reservation';
+import equipmentApi from '@/api/equipment';
 
 export default {
   name: 'CalendarView',
@@ -212,10 +235,14 @@ export default {
         ]
       },
 
+      // 设备筛选相关
+      selectedEquipment: null,
+      equipmentList: []
     };
   },
   mounted() {
     this.loadEvents();
+    this.loadEquipmentList();
   },
 
   beforeDestroy() {
@@ -243,12 +270,18 @@ export default {
         const start = this.formatDate(calendarApi.view.activeStart);
         const end = this.formatDate(calendarApi.view.activeEnd);
 
-        const response = await this.$http.get('/api/reservations/calendar', {
-          params: {
-            start_date: start,
-            end_date: end
-          }
-        });
+        // 构建请求参数
+        const params = {
+          start_date: start,
+          end_date: end
+        };
+
+        // 如果选择了设备，添加设备ID参数
+        if (this.selectedEquipment) {
+          params.equipment_id = this.selectedEquipment;
+        }
+
+        const response = await this.$http.get('/api/reservations/calendar', { params });
 
         if (response.data.success) {
           calendarApi.removeAllEvents();
@@ -262,6 +295,24 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+
+    // 加载设备列表
+    async loadEquipmentList() {
+      try {
+        const response = await equipmentApi.getEquipments({ limit: 100 });
+        if (response.data && response.data.items) {
+          this.equipmentList = response.data.items;
+        }
+      } catch (error) {
+        console.error('Failed to load equipment list:', error);
+        this.$message.error(this.$t('error.serverError'));
+      }
+    },
+
+    // 处理设备选择变化
+    handleEquipmentChange() {
+      this.loadEvents();
     },
 
     // 处理日期范围变化
@@ -631,6 +682,16 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.filter-row {
+  margin-top: 15px;
+}
+
+.equipment-filter {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
 }
 
 .recurring-notice {

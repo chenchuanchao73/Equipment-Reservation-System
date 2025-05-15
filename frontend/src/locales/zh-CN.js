@@ -44,7 +44,7 @@ export default {
     reservation: '预定管理',
     query: '查询预定',
     admin: '管理控制台',
-    login: '登录',
+    login: '管理员登录',
     logout: '退出登录',
     calendar: '日历视图'
   },
@@ -62,12 +62,15 @@ export default {
     step4: '提交预定申请',
     step5: '记录预定码，用于后续查询或取消预定',
     contactInfo: '如有任何问题，请联系IT部门。',
-    viewReservations: '查看预定情况',
+    viewReservations: '查看设备情况',
     viewReservationsDesc: '查看设备的预定情况，帮助您合理安排预定计划。',
     browseEquipment: '浏览设备',
     myReservations: '我的预定管理',
     myReservationsDesc: '创建新预定、查询和管理您的预定记录，修改或取消已有预定。',
     manageReservations: '管理预定',
+    calendarView: '日历视图',
+    calendarViewDesc: '通过日历直观查看设备预定情况，帮助您更好地规划预定时间。',
+    viewCalendar: '查看日历',
     publicQuery: '公共预定查询',
     noRecordsFound: '没有找到符合条件的预定记录'
   },
@@ -130,7 +133,7 @@ export default {
     userName: '用户姓名',
     userDepartment: '用户部门',
     userContact: '联系方式',
-    userEmail: '用户邮箱（可选）',
+    userEmail: '用户邮箱（必填）',
     startTime: '开始时间',
     endTime: '结束时间',
     purpose: '使用目的（可选）',
@@ -302,6 +305,8 @@ export default {
     loadFailed: '加载日历数据失败',
     noEvents: '没有预约记录',
     partOfRecurringReservation: '这是循环预约的一部分',
-    reservationInfo: '预约信息'
+    reservationInfo: '预约信息',
+    selectEquipment: '选择设备筛选',
+    allEquipment: '所有设备'
   }
 }

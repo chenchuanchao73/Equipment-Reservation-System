@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <announcement-bar v-if="announcements.length && !isAdminRoute" class="announcement-fixed" />
     <el-container>
       <el-header v-if="!isAdminRoute">
         <app-header />
@@ -17,16 +18,38 @@
 <script>
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import AnnouncementBar from '@/components/common/AnnouncementBar.vue'
+import { fetchAnnouncements } from '@/api/announcement'
 
 export default {
   name: 'App',
   components: {
     AppHeader,
-    AppFooter
+    AppFooter,
+    AnnouncementBar
+  },
+  data() {
+    return {
+      announcements: []
+    }
   },
   computed: {
     isAdminRoute() {
       return this.$route.path.startsWith('/admin')
+    }
+  },
+  created() {
+    this.loadAnnouncements()
+  },
+  methods: {
+    async loadAnnouncements() {
+      try {
+        const res = await fetchAnnouncements()
+        this.announcements = Array.isArray(res) ? res : []
+        console.log('App组件加载到公告数据:', this.announcements)
+      } catch (error) {
+        console.error('加载公告失败:', error)
+      }
     }
   }
 }
@@ -211,5 +234,26 @@ html, body {
 /* 隐藏表格右侧的空列 */
 .el-table__fixed-right-patch {
   display: none !important;
+}
+
+/* 固定公告栏在顶部 */
+.announcement-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+}
+
+/* 当公告栏显示时，给header和页面内容添加上边距 */
+.announcement-fixed + .el-container .el-header {
+  margin-top: 40px;
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+  .announcement-fixed + .el-container .el-header {
+    margin-top: 60px;
+  }
 }
 </style>

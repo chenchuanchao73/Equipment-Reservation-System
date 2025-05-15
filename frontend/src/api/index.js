@@ -270,11 +270,54 @@ export const adminApi = {
   }
 }
 
-export default {
+// 用户API
+export const userApi = {
+  // 用户登录
+  login(credentials) {
+    return axios.post('/api/user/login', credentials)
+  },
+
+  // 获取当前用户信息
+  getProfile() {
+    return axios.get('/api/user/profile')
+  }
+}
+
+// 公告API
+export const announcementApi = {
+  // 获取所有公告
+  getAnnouncements(params) {
+    return axios.get('/api/announcements', { params })
+  },
+  
+  // 获取单个公告
+  getAnnouncement(id) {
+    return axios.get(`/api/announcements/${id}`)
+  },
+  
+  // 创建公告
+  createAnnouncement(data) {
+    return axios.post('/api/announcements', data)
+  },
+  
+  // 更新公告
+  updateAnnouncement(id, data) {
+    return axios.put(`/api/announcements/${id}`, data)
+  },
+  
+  // 删除公告
+  deleteAnnouncement(id) {
+    return axios.delete(`/api/announcements/${id}`)
+  }
+}
+
+// 导出API对象供Vue组件使用
+export const api = {
   equipment: equipmentApi,
-  category: categoryApi,
   reservation: reservationApi,
   recurringReservation: recurringReservationApi,
+  category: categoryApi,
+  user: userApi,
   admin: adminApi,
-  unsplash: unsplashApi
+  announcement: announcementApi
 }

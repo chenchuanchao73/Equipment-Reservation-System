@@ -13,12 +13,10 @@ from backend.models.admin import Admin
 from backend.schemas.admin import (
     AdminCreate, AdminUpdate, AdminList, 
     Admin as AdminSchema, Token, TokenData,
-    SystemSettings, SystemSettingsUpdate
 )
 from backend.routes.crud.admin import (
     get_admin, get_admins, get_admin_count,
     create_admin, update_admin, delete_admin,
-    get_system_settings, update_system_settings
 )
 from backend.routes.auth import (
     authenticate_admin, create_access_token, 
@@ -206,39 +204,6 @@ async def delete_admin_api(
     except Exception as e:
         logger.error(f"删除管理员出错: {str(e)}")
         raise HTTPException(status_code=500, detail=f"删除管理员出错: {str(e)}")
-
-@router.get("/settings", response_model=SystemSettings)
-async def get_system_settings_api(
-    db: Session = Depends(get_db),
-    current_admin = Depends(get_current_admin)
-):
-    """
-    获取系统设置（需要管理员权限）
-    Get system settings (admin required)
-    """
-    try:
-        settings = get_system_settings(db)
-        return settings
-    except Exception as e:
-        logger.error(f"获取系统设置出错: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"获取系统设置出错: {str(e)}")
-
-@router.put("/settings", response_model=SystemSettings)
-async def update_system_settings_api(
-    settings: SystemSettingsUpdate,
-    db: Session = Depends(get_db),
-    current_admin = Depends(get_current_admin)
-):
-    """
-    更新系统设置（需要管理员权限）
-    Update system settings (admin required)
-    """
-    try:
-        db_settings = update_system_settings(db, settings)
-        return db_settings
-    except Exception as e:
-        logger.error(f"更新系统设置出错: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"更新系统设置出错: {str(e)}")
 
 # 包含邮件相关路由
 router.include_router(

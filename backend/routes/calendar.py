@@ -18,11 +18,17 @@ router = APIRouter(
 async def get_calendar_reservations(
     start_date: str,
     end_date: str,
+    equipment_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     """
     获取日历视图的预约数据
     Get reservation data for calendar view
+
+    参数:
+    - start_date: 开始日期
+    - end_date: 结束日期
+    - equipment_id: 可选的设备ID，用于筛选特定设备的预约
     """
     try:
         # 转换日期字符串为日期对象
@@ -35,6 +41,10 @@ async def get_calendar_reservations(
             Reservation.end_datetime <= end,
             Reservation.status.in_(["confirmed", "in_use"])  # 显示已确认和使用中的预约
         )
+
+        # 如果提供了设备ID，添加设备筛选条件
+        if equipment_id is not None:
+            query = query.filter(Reservation.equipment_id == equipment_id)
 
         reservations = query.all()
 

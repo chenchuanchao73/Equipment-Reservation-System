@@ -17,8 +17,9 @@ import AdminEquipment from '@/views/admin/AdminEquipment.vue'
 import AdminCategory from '@/views/admin/AdminCategory.vue'
 import AdminReservation from '@/views/admin/AdminReservation.vue'
 import AdminReservationDetail from '@/views/admin/AdminReservationDetail.vue'
-import AdminSettings from '@/views/admin/AdminSettings.vue'
 import NotFound from '@/views/NotFound.vue'
+import AnnouncementManage from '@/views/admin/AnnouncementManage.vue'
+import AdminSettings from '@/views/admin/AdminSettings.vue'
 
 Vue.use(VueRouter)
 
@@ -135,7 +136,43 @@ const routes = [
         path: 'settings',
         name: 'admin-settings',
         component: AdminSettings,
-        meta: { title: '系统设置', requiresAuth: true }
+        meta: { title: '系统管理', requiresAuth: true }
+      },
+      {
+        path: 'announcement',
+        name: 'admin-announcement',
+        component: AnnouncementManage,
+        meta: { title: '公告管理', requiresAuth: true }
+      },
+      {
+        path: 'email',
+        name: 'admin-email',
+        component: () => import('@/views/admin/EmailLayout.vue'),
+        meta: { title: '邮件管理', requiresAuth: true },
+        children: [
+          {
+            path: '',
+            redirect: 'settings'
+          },
+          {
+            path: 'settings',
+            name: 'admin-email-settings',
+            component: () => import('@/views/admin/EmailSettings.vue'),
+            meta: { title: '邮件设置', requiresAuth: true }
+          },
+          {
+            path: 'templates',
+            name: 'admin-email-templates',
+            component: () => import('@/views/admin/EmailTemplates.vue'),
+            meta: { title: '邮件模板', requiresAuth: true }
+          },
+          {
+            path: 'logs',
+            name: 'admin-email-logs',
+            component: () => import('@/views/admin/EmailLogs.vue'),
+            meta: { title: '邮件日志', requiresAuth: true }
+          }
+        ]
       },
       {
         path: 'db-viewer',

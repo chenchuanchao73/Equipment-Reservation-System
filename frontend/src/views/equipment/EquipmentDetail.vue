@@ -273,7 +273,12 @@ export default {
         }
 
         const response = await reservationApi.getReservations(params)
-        this.reservations = response.data.items
+        // 按开始时间升序排序，使最近的预约显示在前面
+        this.reservations = response.data.items.sort((a, b) => {
+          const dateA = new Date(a.start_datetime)
+          const dateB = new Date(b.start_datetime)
+          return dateA - dateB
+        })
       } catch (error) {
         console.error('Failed to fetch reservations:', error)
         this.$message.error(this.$t('common.error'))
@@ -324,41 +329,53 @@ export default {
 
     // 获取时间线项的类型
     getTimelineItemType(reservation) {
-      if (reservation.status === 'cancelled') {
-        return 'info';
+      // 根据实际状态返回不同的类型
+      switch(reservation.status) {
+        case 'cancelled':
+          return 'danger'  // 已取消：从info改为danger(红色)
+        case 'expired':
+          return 'warning'
+        case 'in_use':
+          return 'primary' // 使用中：从success改为primary(蓝色)
+        case 'confirmed':
+          return 'success' // 已确认：从primary改为success(绿色)
+        default:
+          return 'success'
       }
-
-      if (isReservationExpired(reservation.end_datetime)) {
-        return 'warning';
-      }
-
-      return 'primary';
     },
 
     // 获取状态标签的类型
     getStatusTagType(reservation) {
-      if (reservation.status === 'cancelled') {
-        return 'info';
+      // 根据实际状态返回不同的类型
+      switch(reservation.status) {
+        case 'cancelled':
+          return 'danger'  // 已取消：从info改为danger(红色)
+        case 'expired':
+          return 'warning'
+        case 'in_use':
+          return 'primary' // 使用中：从success改为primary(蓝色)
+        case 'confirmed':
+          return 'success' // 已确认：从primary改为success(绿色)
+        default:
+          return 'success'
       }
-
-      if (isReservationExpired(reservation.end_datetime)) {
-        return 'warning';
-      }
-
-      return 'success';
     },
 
     // 获取状态文本
     getStatusText(reservation) {
-      if (reservation.status === 'cancelled') {
-        return this.$t('reservation.cancelled');
+      // 根据实际状态返回对应的文本
+      switch(reservation.status) {
+        case 'cancelled':
+          return this.$t('reservation.cancelled')
+        case 'expired':
+          return this.$t('reservation.expired')
+        case 'in_use':
+          return this.$t('reservation.inUse')
+        case 'confirmed':
+          return this.$t('reservation.confirmed')
+        default:
+          return this.$t('reservation.confirmed')
       }
-
-      if (isReservationExpired(reservation.end_datetime)) {
-        return this.$t('reservation.expired');
-      }
-
-      return this.$t('reservation.confirmed');
     }
   }
 }

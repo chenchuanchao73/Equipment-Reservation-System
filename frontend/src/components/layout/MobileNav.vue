@@ -203,5 +203,12 @@ export default {
   .mobile-nav {
     display: block;
   }
+  .mobile-nav-toggle {
+    top: 50%;
+    right: 0;
+    left: auto;
+    transform: translateY(-50%);
+    margin-right: 8px;
+  }
 }
 </style>

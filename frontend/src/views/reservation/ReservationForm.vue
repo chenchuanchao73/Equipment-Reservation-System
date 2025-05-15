@@ -296,10 +296,32 @@ export default {
       },
       endPickerOptions: {
         disabledDate: (time) => {
+          // 如果没有选择开始时间，禁用过去的日期
           if (!this.form.startDateTime) {
-            return time.getTime() < Date.now() - 8.64e7; // 如果没有选择开始时间，禁用过去的日期
+            return time.getTime() < Date.now() - 8.64e7;
           }
-          return time.getTime() < this.form.startDateTime.getTime(); // 禁用早于开始时间的日期
+          
+          // 获取选择日期的年月日部分（不含时间）
+          const selectedDate = new Date(time.getFullYear(), time.getMonth(), time.getDate());
+          const startDate = new Date(
+            this.form.startDateTime.getFullYear(),
+            this.form.startDateTime.getMonth(),
+            this.form.startDateTime.getDate()
+          );
+          
+          // 如果日期早于开始日期，则禁用
+          if (selectedDate < startDate) {
+            return true;
+          }
+          
+          // 如果是同一天，检查一下当前是否为00:00（一天的开始）
+          // 如果是00:00，可以选择，因为用户可以设置晚于开始时间的结束时间
+          // 如果不是00:00，说明这是日期选择器显示的时间，不是用户最终选择的时间，可以允许选择
+          if (selectedDate.getTime() === startDate.getTime()) {
+            return false; // 同一天也可以选择
+          }
+          
+          return false; // 允许选择晚于开始日期的所有日期
         }
       }
     }

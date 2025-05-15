@@ -24,6 +24,15 @@
         <el-button icon="el-icon-arrow-left" @click="$router.push(`/equipment/${equipment.id}`)">
           {{ $t('common.back') }}
         </el-button>
+        
+        <!-- 添加返回单次预约按钮 -->
+        <el-button 
+          type="primary" 
+          icon="el-icon-refresh-left" 
+          @click="backToSingleReservation" 
+          class="back-to-single">
+          {{ $t('reservation.singleReservation') }}
+        </el-button>
       </div>
 
       <h1 class="page-title">{{ $t('reservation.recurringForm') }}</h1>
@@ -532,6 +541,11 @@ export default {
       this.$router.push(`/equipment/${this.equipment.id}`)
     },
 
+    // 返回单次预约表单
+    backToSingleReservation() {
+      this.$router.push(`/equipment/${this.equipment.id}/reserve`)
+    },
+
     closeSuccessDialog() {
       this.successDialogVisible = false
       this.resetForm()
@@ -624,6 +638,12 @@ export default {
 
 .back-link {
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.back-to-single {
+  margin-left: 10px;
 }
 
 .page-title {

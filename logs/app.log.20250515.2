@@ -1,0 +1,32 @@
+2025-05-15 13:31:16,579 - root - INFO - 日志轮转完成
+2025-05-15 13:31:16,579 - root - INFO - 测试日志 #1 - 轮转后
+2025-05-15 13:31:17,080 - root - INFO - 测试日志 #2 - 轮转后
+2025-05-15 13:31:17,581 - root - INFO - 测试日志 #3 - 轮转后
+2025-05-15 13:31:18,082 - root - INFO - 测试日志 #4 - 轮转后
+2025-05-15 13:31:18,583 - root - INFO - 测试日志 #5 - 轮转后
+2025-05-15 13:31:21,587 - root - INFO - 设备预定系统启动中...
+2025-05-15 13:31:21,925 - root - INFO - 应用程序将在 http://localhost:8000 启动
+2025-05-15 13:31:21,925 - root - INFO - 局域网可通过 http://192.168.73.2:8000 访问
+2025-05-15 13:31:22,057 - root - INFO - 设备预定系统启动中...
+2025-05-15 13:31:22,461 - root - INFO - FastAPI应用初始化中...
+2025-05-15 13:31:22,463 - backend.i18n - INFO - 国际化设置成功
+2025-05-15 13:31:22,857 - root - INFO - 应用启动 / Application started
+2025-05-15 13:31:22,859 - backend.database - INFO - 数据库初始化成功
+2025-05-15 13:31:22,859 - root - INFO - 后台任务已启动
+2025-05-15 13:31:22,860 - root - INFO - 执行预约状态更新任务
+2025-05-15 13:31:22,860 - backend.utils.status_updater - INFO - 当前时间: 2025-05-15 13:31:22.860596
+2025-05-15 13:31:22,860 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=15, 时=13, 分=31, 秒=22
+2025-05-15 13:31:22,872 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-15 13:31:22,872 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-15 13:31:22.860596 AND Reservation.end_datetime > 2025-05-15 13:31:22.860596
+2025-05-15 13:31:22,874 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-15 13:31:22,874 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-15 13:31:22,875 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-15 13:31:22.860596
+2025-05-15 13:31:22,877 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-15 13:31:22,877 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-15 13:31:22,877 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-15 13:31:25,691 - backend.routes.reservation - INFO - 排序参数: sort_by=None, sort_order=None
+2025-05-15 13:31:45,507 - root - INFO - 日志备份已创建: logs\backups\app-20250515-133145.log
+2025-05-15 13:31:45,507 - root - INFO - 开始测试日志轮转...
+2025-05-15 13:31:45,508 - root - INFO - 当前日志文件: ['app.log', 'app.log.1', 'app.log.2', 'app.log.2025-05-08', 'app.log.20250515', 'app.log.20250515.1', 'app.log.backup']
+2025-05-15 13:31:45,508 - root - INFO - 手动触发日志轮转...
+2025-05-15 13:31:45,508 - root - INFO - 手动触发日志轮转...

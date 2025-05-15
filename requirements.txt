@@ -24,3 +24,8 @@ python-i18n==0.3.9
 
 # 邮件支持
 aiosmtplib==2.0.1
+
+# 日志处理
+concurrent-log-handler==0.9.20
+pywin32==310; platform_system=="Windows"  # Windows平台上的依赖
+concurrent-log-handler>=0.9.20 

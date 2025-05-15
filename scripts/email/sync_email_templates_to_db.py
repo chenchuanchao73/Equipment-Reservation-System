@@ -45,6 +45,9 @@ Dear {{ reservation.user_name }}, your equipment reservation has been created su
     <tr><th>开始时间 / Start Time</th><td>{{ reservation.start_datetime }}</td></tr>
     <tr><th>结束时间 / End Time</th><td>{{ reservation.end_datetime }}</td></tr>
     <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+    {% if reservation.description %}
+    <tr><th>设备描述 / Equipment Description</th><td>{{ reservation.description }}</td></tr>
+    {% endif %}
 </table>
 <p>如有任何问题，请联系管理员。<br>If you have any questions, please contact the administrator.</p>
 </body></html>
@@ -63,6 +66,9 @@ Dear {{ reservation.user_name }}, your recurring equipment reservation has been 
 <tr><th>重复规则 / Recurrence Rule</th><td>{{ reservation.recurrence_rule }}</td></tr>
 <tr><th>每天预约时间 / Time Each Day</th><td>{{ reservation.start_time }} ~ {{ reservation.end_time }}</td></tr>
 <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+{% if reservation.description %}
+<tr><th>设备描述 / Equipment Description</th><td>{{ reservation.description }}</td></tr>
+{% endif %}
 </table>
 <p>如有任何问题，请联系管理员。<br>
 If you have any questions, please contact the administrator.</p>
@@ -81,6 +87,9 @@ Dear {{ reservation.user_name }}, your equipment reservation has been cancelled.
     <tr><th>开始时间 / Start Time</th><td>{{ reservation.start_datetime }}</td></tr>
     <tr><th>结束时间 / End Time</th><td>{{ reservation.end_datetime }}</td></tr>
     <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+    {% if reservation.description %}
+    <tr><th>设备描述 / Equipment Description</th><td>{{ reservation.description }}</td></tr>
+    {% endif %}
 </table>
 <p>如有任何问题，请联系管理员。<br>If you have any questions, please contact the administrator.</p>
 </body></html>
@@ -99,6 +108,9 @@ This cancellation is for a single occurrence of your recurring reservation (see 
     <tr><th>开始时间 / Start Time</th><td>{{ reservation.start_datetime }}</td></tr>
     <tr><th>结束时间 / End Time</th><td>{{ reservation.end_datetime }}</td></tr>
     <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+    {% if reservation.description %}
+    <tr><th>设备描述 / Equipment Description</th><td>{{ reservation.description }}</td></tr>
+    {% endif %}
 </table>
 <p>如有任何问题，请联系管理员。<br>If you have any questions, please contact the administrator.</p>
 </body></html>
@@ -117,6 +129,9 @@ Important Notice: Your entire recurring reservation has been cancelled, includin
     <tr><th>开始日期 / Start Date</th><td>{{ reservation.start_date }}</td></tr>
     <tr><th>结束日期 / End Date</th><td>{{ reservation.end_date }}</td></tr>
     <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+    {% if reservation.description %}
+    <tr><th>设备描述 / Equipment Description</th><td>{{ reservation.description }}</td></tr>
+    {% endif %}
 </table>
 <p>此循环预约下的所有子预约都已被取消。如需重新预约，请重新创建预约。<br>
 All child reservations under this recurring reservation have been cancelled. If you need to make a new reservation, please create a new one.</p>

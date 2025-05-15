@@ -8,7 +8,7 @@
 
     <div class="features">
       <el-row :gutter="30">
-        <el-col :xs="24" :sm="12">
+        <el-col :xs="24" :sm="8">
           <div class="feature-card">
             <i class="el-icon-view feature-icon"></i>
             <h3>{{ $t('home.viewReservations') }}</h3>
@@ -19,13 +19,24 @@
           </div>
         </el-col>
 
-        <el-col :xs="24" :sm="12">
+        <el-col :xs="24" :sm="8">
           <div class="feature-card">
             <i class="el-icon-s-order feature-icon"></i>
             <h3>{{ $t('home.myReservations') }}</h3>
             <p>{{ $t('home.myReservationsDesc') }}</p>
             <el-button type="success" @click="goToReservationManage">
               <i class="el-icon-s-order"></i> {{ $t('home.manageReservations') }} <i class="el-icon-arrow-right"></i>
+            </el-button>
+          </div>
+        </el-col>
+
+        <el-col :xs="24" :sm="8">
+          <div class="feature-card">
+            <i class="el-icon-date feature-icon"></i>
+            <h3>{{ $t('home.calendarView') }}</h3>
+            <p>{{ $t('home.calendarViewDesc') }}</p>
+            <el-button type="warning" @click="goToCalendar">
+              <i class="el-icon-date"></i> {{ $t('home.viewCalendar') }} <i class="el-icon-arrow-right"></i>
             </el-button>
           </div>
         </el-col>
@@ -199,7 +210,7 @@
 
       <!-- 无查询结果提示 -->
       <div v-else-if="querySubmitted" class="no-results">
-        <el-empty :description="$t('reservation.noRecordsFound')"></el-empty>
+        <el-empty :description="$t('home.noRecordsFound')"></el-empty>
       </div>
     </div>
   </div>
@@ -228,7 +239,9 @@ export default {
       },
       // 分页相关
       currentPage: 1,
-      pageSize: 10
+      pageSize: 10,
+      // 公告数据
+      announcements: [],
     }
   },
 
@@ -260,6 +273,10 @@ export default {
 
     goToReservationManage() {
       this.$router.push('/reservation/query')
+    },
+
+    goToCalendar() {
+      this.$router.push('/calendar')
     },
 
     // 获取设备类别
@@ -412,7 +429,7 @@ export default {
     // 处理页码变化
     handleCurrentChange(page) {
       this.currentPage = page;
-    }
+    },
   }
 }
 </script>

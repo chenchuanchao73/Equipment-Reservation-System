@@ -45,8 +45,9 @@ async def init_db():
         from backend.models.equipment import Equipment
         from backend.models.reservation import Reservation
         from backend.models.recurring_reservation import RecurringReservation
-        from backend.models.admin import Admin, SystemSettings
+        from backend.models.admin import Admin
         from backend.models.email import EmailSettings, EmailTemplate, EmailLog
+        from backend.models.announcement import Announcement
 
         # 创建所有表
         Base.metadata.create_all(bind=engine)

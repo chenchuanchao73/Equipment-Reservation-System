@@ -62,12 +62,15 @@ export default {
     step4: 'Submit reservation request',
     step5: 'Record the reservation code for future query or cancellation',
     contactInfo: 'If you have any questions, please contact the IT department.',
-    viewReservations: 'View Reservations',
-    viewReservationsDesc: 'View equipment reservation status to help you plan your reservations.',
+    viewReservations: 'View Equipment',
+    viewReservationsDesc: 'View equipment reservation status to help you check and plan your reservations.',
     browseEquipment: 'Browse Equipment',
     myReservations: 'My Reservations',
     myReservationsDesc: 'Create new reservations, query and manage your reservation records, modify or cancel existing reservations.',
     manageReservations: 'Manage Reservations',
+    calendarView: 'Calendar View',
+    calendarViewDesc: 'View equipment reservations through an intuitive calendar interface to better plan your reservation time.',
+    viewCalendar: 'View Calendar',
     publicQuery: 'Public Reservation Query',
     noRecordsFound: 'No matching reservation records found'
   },
@@ -129,7 +132,7 @@ export default {
     userName: 'User Name',
     userDepartment: 'User Department',
     userContact: 'Contact',
-    userEmail: 'Email (Optional)',
+    userEmail: 'Email (Required)',
     startTime: 'Start Time',
     endTime: 'End Time',
     purpose: 'Purpose (Optional)',
@@ -300,6 +303,8 @@ export default {
     loadFailed: 'Failed to load calendar data',
     noEvents: 'No reservations found',
     partOfRecurringReservation: 'This is part of a recurring reservation',
-    reservationInfo: 'Reservation Information'
+    reservationInfo: 'Reservation Information',
+    selectEquipment: 'Select Equipment to Filter',
+    allEquipment: 'All Equipment'
   }
 }

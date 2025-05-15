@@ -74,9 +74,10 @@ async def create_reservation_api(
                 "start_datetime": format_datetime(db_reservation.start_datetime),
                 "end_datetime": format_datetime(db_reservation.end_datetime),
                 "purpose": db_reservation.purpose,
+                "description": equipment.description,
                 # 二维码功能已移除
                 "site_url": "http://localhost:8000",  # 应该从配置中获取
-                "status": db_reservation.status  # 补充状态字段，确保邮件模板能显示
+                "status": "已确认 / Confirmed"  # 补充状态字段，确保邮件模板能显示
             }
 
             # 发送邮件
@@ -662,6 +663,7 @@ async def update_reservation_api(
                 "start_datetime": format_datetime(db_reservation.start_datetime),
                 "end_datetime": format_datetime(db_reservation.end_datetime),
                 "purpose": db_reservation.purpose,
+                "description": equipment.description,
                 # 二维码功能已移除
                 "site_url": "http://localhost:8000",  # 应该从配置中获取
                 "changed": {
@@ -669,7 +671,7 @@ async def update_reservation_api(
                     "end_datetime": reservation_update.end_datetime is not None,
                     "purpose": reservation_update.purpose is not None
                 },
-                "status": db_reservation.status  # 补充状态字段，确保邮件模板能显示
+                "status": "已确认 / Confirmed"  # 补充状态字段，确保邮件模板能显示
             }
 
             # 发送邮件
@@ -805,8 +807,9 @@ async def cancel_reservation_api(
                 "start_datetime": format_datetime(db_reservation.start_datetime),
                 "end_datetime": format_datetime(db_reservation.end_datetime),
                 "purpose": db_reservation.purpose,
+                "description": equipment.description,
                 "site_url": "http://localhost:8000",  # 应该从配置中获取
-                "status": "已取消",
+                "status": "已取消 / Cancelled",
                 "recurring_reservation_id": getattr(db_reservation, 'recurring_reservation_id', None),
                 "pattern_type": getattr(db_reservation, 'pattern_type', None)
             }

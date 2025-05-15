@@ -87,12 +87,13 @@ async def create_recurring_reservation_api(
                         "equipment_name": equipment.name,
                         "equipment_category": equipment.category if hasattr(equipment, 'category') else '',
                         "location": equipment.location if hasattr(equipment, 'location') else '',
+                        "description": equipment.description if hasattr(equipment, 'description') else '',
                         "start_date": db_recurring_reservation.start_date.strftime('%Y-%m-%d'),
                         "end_date": db_recurring_reservation.end_date.strftime('%Y-%m-%d'),
                         "recurrence_rule": recurrence_rule,
                         "start_time": db_recurring_reservation.start_time.strftime('%H:%M'),
                         "end_time": db_recurring_reservation.end_time.strftime('%H:%M'),
-                        "status": db_recurring_reservation.status
+                        "status": "已确认 / Confirmed"
                     },
                     lang=recurring_reservation.lang or "zh_CN",
                     db=db,

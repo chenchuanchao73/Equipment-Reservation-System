@@ -9,6 +9,9 @@
                                 <tr><th>重复规则 / Recurrence Rule</th><td>{{ reservation.recurrence_rule }}</td></tr>
                                 <tr><th>每天预约时间 / Time Each Day</th><td>{{ reservation.start_time }} ~ {{ reservation.end_time }}</td></tr>
                                 <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+                                {% if reservation.description %}
+                                <tr><th>设备描述 / Equipment Description</th><td>{{ reservation.description }}</td></tr>
+                                {% endif %}
                                 </table>
                                 <p>如有任何问题，请联系管理员。<br>
                                 If you have any questions, please contact the administrator.</p>

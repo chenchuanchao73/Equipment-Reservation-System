@@ -1,5 +1,80 @@
 <template>
   <div class="admin-layout">
+    <!-- 移动端菜单按钮 -->
+    <div class="admin-mobile-nav-toggle" @click="mobileMenuOpen = true"></div>
+    <!-- 移动端抽屉菜单和遮罩层 -->
+    <div v-if="mobileMenuOpen" class="admin-mobile-nav-overlay" @click="mobileMenuOpen = false"></div>
+    <div v-if="mobileMenuOpen" class="admin-mobile-nav-drawer">
+      <div class="admin-mobile-nav-header">
+        <img src="@/assets/logo.png" alt="Logo" class="admin-mobile-nav-logo">
+        <h3 class="admin-mobile-nav-title">管理控制台</h3>
+      </div>
+      <el-menu
+        :default-active="activeMenu"
+        class="admin-mobile-nav-list"
+        background-color="#304156"
+        text-color="#bfcbd9"
+        active-text-color="#409EFF"
+        @select="handleMobileMenuSelect"
+      >
+        <el-menu-item index="/admin/dashboard">
+          <i class="el-icon-s-home"></i>
+          <span>控制台</span>
+        </el-menu-item>
+        <el-submenu index="equipment">
+          <template slot="title">
+            <i class="el-icon-s-grid"></i>
+            <span>设备管理</span>
+          </template>
+          <el-menu-item index="/admin/equipment">
+            <i class="el-icon-s-management"></i>
+            <span>设备列表</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/category">
+            <i class="el-icon-collection-tag"></i>
+            <span>设备类别</span>
+          </el-menu-item>
+        </el-submenu>
+        <el-menu-item index="/admin/reservation">
+          <i class="el-icon-s-order"></i>
+          <span>预定管理</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/announcement">
+          <i class="el-icon-message-solid"></i>
+          <span>公告管理</span>
+        </el-menu-item>
+        <el-submenu index="email-mobile">
+          <template slot="title">
+            <i class="el-icon-message"></i>
+            <span>邮件管理</span>
+          </template>
+          <el-menu-item index="/admin/email/settings">
+            <i class="el-icon-setting"></i>
+            <span>邮件设置</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/email/templates">
+            <i class="el-icon-document"></i>
+            <span>邮件模板</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/email/logs">
+            <i class="el-icon-tickets"></i>
+            <span>邮件日志</span>
+          </el-menu-item>
+        </el-submenu>
+        <el-menu-item index="/admin/db-viewer">
+          <i class="el-icon-view"></i>
+          <span>数据库表查看</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/settings">
+          <i class="el-icon-setting"></i>
+          <span>系统管理</span>
+        </el-menu-item>
+      </el-menu>
+      <div class="admin-mobile-nav-footer">
+        <el-button type="primary" plain icon="el-icon-s-home" size="small" @click="handleCommand('home')">返回首页</el-button>
+        <el-button type="danger" plain icon="el-icon-switch-button" size="small" @click="handleCommand('logout')">退出登录</el-button>
+      </div>
+    </div>
     <el-container class="admin-container">
       <el-header class="admin-header">
         <div class="header-left">
@@ -42,9 +117,38 @@
               <span>预定管理</span>
             </el-menu-item>
 
+            <el-menu-item index="/admin/announcement">
+              <i class="el-icon-message-solid"></i>
+              <span>公告管理</span>
+            </el-menu-item>
+            
+            <el-submenu index="email">
+              <template slot="title">
+                <i class="el-icon-message"></i>
+                <span>邮件管理</span>
+              </template>
+              <el-menu-item index="/admin/email/settings">
+                <i class="el-icon-setting"></i>
+                <span>邮件设置</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/email/templates">
+                <i class="el-icon-document"></i>
+                <span>邮件模板</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/email/logs">
+                <i class="el-icon-tickets"></i>
+                <span>邮件日志</span>
+              </el-menu-item>
+            </el-submenu>
+            
+            <el-menu-item index="/admin/db-viewer">
+              <i class="el-icon-view"></i>
+              <span>数据库表查看</span>
+            </el-menu-item>
+            
             <el-menu-item index="/admin/settings">
               <i class="el-icon-setting"></i>
-              <span>系统设置</span>
+              <span>系统管理</span>
             </el-menu-item>
           </el-menu>
         </div>
@@ -75,7 +179,9 @@ export default {
   name: 'AdminLayout',
 
   data() {
-    return {}
+    return {
+      mobileMenuOpen: false
+    }
   },
 
   computed: {
@@ -98,8 +204,6 @@ export default {
   methods: {
     ...mapActions(['logout', 'setLanguage']),
 
-
-
     handleCommand(command) {
       if (command === 'logout') {
         this.handleLogout()
@@ -117,6 +221,19 @@ export default {
     handleLanguageChange(lang) {
       this.setLanguage(lang)
       this.$i18n.locale = lang
+    },
+
+    handleMobileMenuSelect(key) {
+      this.$router.push(key)
+      this.mobileMenuOpen = false
+    },
+
+    toggleMobileMenu() {
+      // 这里可以实现折叠菜单的逻辑，或 emit 事件给父组件
+      const menu = document.querySelector('.header-menu')
+      if (menu) {
+        menu.style.display = (menu.style.display === 'none') ? '' : 'none'
+      }
     }
   }
 }
@@ -250,6 +367,87 @@ export default {
 
   .user-info span {
     display: none;
+  }
+
+  .admin-mobile-nav-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    z-index: 2999;
+  }
+  .admin-mobile-nav-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 260px;
+    height: 100vh;
+    background: #304156;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+  }
+  .admin-mobile-nav-header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    background-color: #263445;
+  }
+  .admin-mobile-nav-logo {
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+  }
+  .admin-mobile-nav-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .admin-mobile-nav-list {
+    flex: 1;
+    border-right: none;
+    background: #304156;
+  }
+  .admin-mobile-nav-footer {
+    padding: 15px 20px;
+    background-color: #263445;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .admin-mobile-nav-toggle {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    left: auto;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #409EFF;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 3001;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  }
+  .admin-mobile-nav-toggle:before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 24px;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="white" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M160 512a32 32 0 0 1 32-32h640a32 32 0 0 1 0 64H192a32 32 0 0 1-32-32zm0-192a32 32 0 0 1 32-32h640a32 32 0 0 1 0 64H192a32 32 0 0 1-32-32zm32 288a32 32 0 0 0 0 64h640a32 32 0 0 0 0-64H192z"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin: auto;
   }
 }
 </style>

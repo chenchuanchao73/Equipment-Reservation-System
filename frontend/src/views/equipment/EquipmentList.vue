@@ -129,8 +129,10 @@
 
               <div class="equipment-actions">
                 <el-button
-                  type="text"
+                  type="danger"
+                  size="small"
                   @click.stop="viewEquipmentDetail(equipment.id)"
+                  style="font-weight: bold;"
                 >
                   {{ $t('equipment.viewDetail') }}
                 </el-button>
@@ -193,7 +195,7 @@ export default {
 
     // 获取完整的图片URL
     baseUrl() {
-      return axios.defaults.baseURL || 'http://localhost:8000';
+      return axios.defaults.baseURL || '';
     }
   },
 

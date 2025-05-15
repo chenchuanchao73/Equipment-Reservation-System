@@ -7,8 +7,8 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 
-from backend.models.admin import Admin, SystemSettings
-from backend.schemas.admin import AdminCreate, AdminUpdate, SystemSettingsUpdate
+from backend.models.admin import Admin
+from backend.schemas.admin import AdminCreate, AdminUpdate
 from backend.routes.auth import get_password_hash
 
 # 设置日志
@@ -136,42 +136,3 @@ def delete_admin(db: Session, admin_id: int):
     db.commit()
     
     return True
-
-def get_system_settings(db: Session):
-    """
-    获取系统设置
-    Get system settings
-    """
-    # 获取系统设置，如果不存在则创建默认设置
-    settings = db.query(SystemSettings).first()
-    if not settings:
-        settings = SystemSettings(
-            site_name="设备预定系统",
-            maintenance_mode=False,
-            reservation_limit_per_day=5,
-            allow_equipment_conflict=False,
-            advance_reservation_days=30
-        )
-        db.add(settings)
-        db.commit()
-        db.refresh(settings)
-    
-    return settings
-
-def update_system_settings(db: Session, settings: SystemSettingsUpdate):
-    """
-    更新系统设置
-    Update system settings
-    """
-    # 获取系统设置，如果不存在则创建默认设置
-    db_settings = get_system_settings(db)
-    
-    # 更新字段
-    update_data = settings.dict(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(db_settings, key, value)
-    
-    db.commit()
-    db.refresh(db_settings)
-    
-    return db_settings

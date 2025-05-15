@@ -717,8 +717,19 @@ export default {
           const reservationCode = this.reservation.reservation_code
           const reservationNumber = this.reservation.reservation_number
 
+          // 准备取消请求数据
+          const data = {}
+          
+          // 添加预约序号参数，确保只取消特定的子预约
+          if (reservationNumber) {
+            data.reservation_number = reservationNumber
+            console.log('循环子预约取消 - 预约序号参数存在:', reservationNumber)
+          } else {
+            console.warn('循环子预约取消 - 预约序号参数不存在，将取消所有具有相同预约码的预约')
+          }
+
           // 取消单个子预约
-          const response = await reservationApi.cancelReservation(reservationCode)
+          const response = await reservationApi.cancelReservation(reservationCode, data)
 
           console.log('Cancel child reservation response:', response)
 
@@ -756,7 +767,7 @@ export default {
                 }
               ).then(() => {
                 // 跳转到循环预约详情页面
-                this.$router.push(`/admin/recurring-reservation/${this.reservation.recurring_reservation_id}`)
+                this.$router.push(`/recurring-reservation/${this.reservation.recurring_reservation_id}`)
               }).catch(() => {
                 // 用户选择留在当前页面，直接重新获取预定信息
                 this.fetchReservation()
@@ -792,7 +803,7 @@ export default {
                 }
               ).then(() => {
                 // 跳转到循环预约详情页面
-                this.$router.push(`/admin/recurring-reservation/${this.reservation.recurring_reservation_id}`)
+                this.$router.push(`/recurring-reservation/${this.reservation.recurring_reservation_id}`)
               }).catch(() => {
                 // 用户选择留在当前页面，直接重新获取预定信息
                 this.fetchReservation()

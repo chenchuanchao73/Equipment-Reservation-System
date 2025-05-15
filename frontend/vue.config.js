@@ -8,12 +8,17 @@ module.exports = defineConfig({
   devServer: {
     // 设置端口为8080
     port: 8080,
+    // 设置主机为0.0.0.0，允许局域网访问
+    host: '0.0.0.0',
     // 代理配置
     proxy: {
       // 将所有以/api开头的请求代理到后端服务器
       '/api': {
         target: 'http://localhost:8000',
-        changeOrigin: true
+        changeOrigin: true,
+        pathRewrite: {
+          '^/api': '/api'
+        }
       },
       // 将所有以/static开头的请求代理到后端服务器
       '/static': {

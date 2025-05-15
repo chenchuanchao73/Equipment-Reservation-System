@@ -105,6 +105,12 @@
                         <th>状态 / Status</th>
                         <td>{{ reservation.status }}</td>
                     </tr>
+                    {% if reservation.description %}
+                    <tr>
+                        <th>设备描述 / Equipment Description</th>
+                        <td>{{ reservation.description }}</td>
+                    </tr>
+                    {% endif %}
                 </table>
             </div>
             

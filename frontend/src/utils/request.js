@@ -3,11 +3,30 @@ import store from '@/store'
 import router from '@/router'
 import { Message } from 'element-ui'
 
+// 获取当前主机名和端口
+const hostname = window.location.hostname
+console.log('Current hostname:', hostname)
+
+// 动态设置API的baseURL
+let apiBaseURL = ''
+if (hostname === 'localhost' || hostname === '127.0.0.1') {
+  // 本地开发环境
+  apiBaseURL = 'http://localhost:8000'
+} else {
+  // 局域网/生产环境：使用当前主机IP，但端口改为后端端口
+  // 这里假设前端和后端在同一台服务器上，只是端口不同
+  apiBaseURL = `http://${hostname}:8000`
+}
+
+console.log('Generated API URL:', apiBaseURL)
+
 // 创建axios实例
 const service = axios.create({
-  baseURL: process.env.VUE_APP_API_URL || '',
+  baseURL: apiBaseURL,
   timeout: 10000
 })
+
+console.log('API Base URL:', service.defaults.baseURL)
 
 // 请求拦截器
 service.interceptors.request.use(

@@ -24,7 +24,21 @@ router.beforeEach((to, from, next) => {
   NProgress.start()
 
   // 设置页面标题
-  document.title = to.meta.title ? `${to.meta.title} - HTNIA设备预定系统` : 'HTNIA设备预定系统'
+  let pageTitle = to.meta.title || ''
+
+  // 如果标题是i18n键值（包含点号），则使用i18n进行翻译
+  if (pageTitle && pageTitle.includes('.')) {
+    try {
+      const i18nTitle = router.app.$i18n.t(pageTitle)
+      if (i18nTitle !== pageTitle) { // 如果翻译成功（结果不等于原键值）
+        pageTitle = i18nTitle
+      }
+    } catch (e) {
+      console.error('Failed to translate page title:', e)
+    }
+  }
+
+  document.title = pageTitle ? `${pageTitle} - HTNIA设备预定系统` : 'HTNIA设备预定系统'
 
   // 获取用户登录状态
   const hasToken = store.getters.isLoggedIn
@@ -41,6 +55,12 @@ router.beforeEach((to, from, next) => {
 
   // 如果需要登录权限但未登录，跳转到登录页
   if (requiresAuth && !hasToken) {
+    // 如果已经在登录页，直接放行，避免死循环
+    if (to.path === '/admin/login') {
+      next()
+      NProgress.done()
+      return
+    }
     next(`/admin/login?redirect=${to.path}`)
     NProgress.done()
     return

@@ -1,43 +1,50 @@
 """
-管理员数据验证模式
-Admin data validation schemas
+管理员API模式
+Admin API schemas
 """
-from typing import Optional, List
+from typing import List, Optional
+from pydantic import BaseModel, Field, validator, EmailStr
 from datetime import datetime
-from pydantic import BaseModel, Field
 
-# 基础管理员模式
+# 标准响应基础模式
+class ResponseBase(BaseModel):
+    success: bool = Field(True, title="是否成功")
+    message: str = Field("操作成功", title="响应消息")
+
+# 管理员基础模式
 class AdminBase(BaseModel):
-    username: str = Field(..., title="用户名", max_length=50)
-    name: Optional[str] = Field(None, title="姓名", max_length=100)
-    role: Optional[str] = Field("admin", title="角色", max_length=20)
-    is_active: Optional[bool] = Field(True, title="是否激活")
+    username: str = Field(..., title="用户名")
+    name: Optional[str] = Field(None, title="管理员姓名")
 
-# 创建管理员请求
+# 管理员创建请求
 class AdminCreate(AdminBase):
-    password: str = Field(..., title="密码", min_length=6)
+    password: str = Field(..., title="密码")
+    role: str = Field("admin", title="角色")
+    is_active: bool = Field(True, title="是否激活")
 
-# 更新管理员请求
+# 管理员更新请求
 class AdminUpdate(BaseModel):
-    name: Optional[str] = Field(None, title="姓名", max_length=100)
-    role: Optional[str] = Field(None, title="角色", max_length=20)
+    name: Optional[str] = Field(None, title="管理员姓名")
+    password: Optional[str] = Field(None, title="密码")
+    role: Optional[str] = Field(None, title="角色")
     is_active: Optional[bool] = Field(None, title="是否激活")
-    password: Optional[str] = Field(None, title="密码", min_length=6)
 
-# 管理员响应
+# 管理员响应模式
 class Admin(AdminBase):
     id: int
+    role: str
+    is_active: bool
     created_at: datetime
-    
+
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # 管理员列表响应
 class AdminList(BaseModel):
     items: List[Admin]
     total: int
 
-# 令牌数据
+# Token相关模式
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -46,31 +53,5 @@ class Token(BaseModel):
     name: Optional[str] = None
     role: str
 
-# 令牌数据载荷
 class TokenData(BaseModel):
-    username: Optional[str] = None
-
-# 系统设置基础模式
-class SystemSettingsBase(BaseModel):
-    site_name: str = Field(..., title="站点名称", max_length=100)
-    maintenance_mode: bool = Field(False, title="维护模式")
-    reservation_limit_per_day: int = Field(5, title="每日预定限制", ge=1)
-    allow_equipment_conflict: bool = Field(False, title="允许设备冲突")
-    advance_reservation_days: int = Field(30, title="提前预定天数", ge=1)
-
-# 系统设置更新请求
-class SystemSettingsUpdate(BaseModel):
-    site_name: Optional[str] = Field(None, title="站点名称", max_length=100)
-    maintenance_mode: Optional[bool] = Field(None, title="维护模式")
-    reservation_limit_per_day: Optional[int] = Field(None, title="每日预定限制", ge=1)
-    allow_equipment_conflict: Optional[bool] = Field(None, title="允许设备冲突")
-    advance_reservation_days: Optional[int] = Field(None, title="提前预定天数", ge=1)
-
-# 系统设置响应
-class SystemSettings(SystemSettingsBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-    
-    class Config:
-        from_attributes = True
+    username: str

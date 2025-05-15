@@ -8,13 +8,12 @@ from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 import sys
 from contextlib import asynccontextmanager
 import uvicorn
 import asyncio
 from datetime import datetime, timedelta
-import logging.handlers
 
 # 添加项目根目录到Python路径
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,82 +22,27 @@ sys.path.append(project_root)
 # 直接从项目根目录导入config.py
 sys.path.insert(0, project_root)  # 确保项目根目录在导入路径的最前面
 
+# 导入新的日志系统
+from log_config import setup_logging, check_log_file, backup_logs, force_log_rotation
+
 # 导入配置和模块
 from config import TEMPLATES_DIR, STATIC_DIR, APP_NAME, DEFAULT_LANGUAGE
 from backend.database import init_db, get_db
 from backend.i18n import setup_i18n, get_locale, I18nMiddleware
 from backend.utils.status_updater import update_reservation_statuses
 
-# 确保日志目录存在
-logs_dir = os.path.join(project_root, "logs")
-if not os.path.exists(logs_dir):
-    os.makedirs(logs_dir)
-
-# 设置日志（按天轮转，保留30天的日志）
-# 确保日志目录存在
-if not os.path.exists(logs_dir):
-    os.makedirs(logs_dir)
-
-# 创建日志格式化器
-log_formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-
-# 获取当前日期作为文件名
-def get_log_filename():
-    """获取基于当前日期的日志文件名"""
-    current_date = datetime.now().strftime("%Y-%m-%d")
-    return os.path.join(logs_dir, f"app.{current_date}.log")
-
-# 创建自定义的FileHandler，每天使用新的日志文件
-class DailyFileHandler(logging.FileHandler):
-    """每天使用新的日志文件的处理器"""
-    def __init__(self, filename_func, mode='a', encoding=None, delay=False):
-        self.filename_func = filename_func
-        # 使用当前日期初始化文件名
-        filename = self.filename_func()
-        super().__init__(filename, mode, encoding, delay)
-        self.date = datetime.now().date()
-
-    def emit(self, record):
-        """发出日志记录前检查日期是否变化"""
-        current_date = datetime.now().date()
-        # 如果日期变化，关闭当前文件并打开新文件
-        if current_date != self.date:
-            self.close()
-            self.baseFilename = self.filename_func()
-            self.stream = self._open()
-            self.date = current_date
-        super().emit(record)
-
-# 创建每日新文件的处理器
-file_handler = DailyFileHandler(
-    filename_func=get_log_filename,
-    encoding="utf-8",
-    delay=True  # 延迟创建文件，直到第一条日志记录
-)
-file_handler.setFormatter(log_formatter)
-file_handler.setLevel(logging.INFO)
-
-# 创建控制台处理器
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(log_formatter)
-console_handler.setLevel(logging.INFO)
-
-# 配置根日志记录器
-root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)
-root_logger.addHandler(file_handler)
-root_logger.addHandler(console_handler)
-
-# 获取当前模块的日志记录器
-logger = logging.getLogger(__name__)
+# 设置新的日志系统
+logger, log_handler = setup_logging()
+check_log_file()
+logger.info("FastAPI应用初始化中...")
 
 # 定义状态更新任务
 async def status_update_task():
     """定期更新预约状态的后台任务"""
     while True:
+        # 先检查日志文件是否存在
+        check_log_file()
+        
         logger.info("执行预约状态更新任务")
         db = None
         try:
@@ -107,7 +51,9 @@ async def status_update_task():
             # 更新预约状态
             update_reservation_statuses(db)
         except Exception as e:
-            logger.error(f"更新预约状态时出错: {str(e)}")
+            logger.error(f"更新预约状态时出错: {str(e)}", exc_info=True)
+            # 发生错误时尝试备份日志
+            backup_logs()
         finally:
             # 确保数据库连接被关闭
             if db:
@@ -115,6 +61,32 @@ async def status_update_task():
 
         # 每1分钟执行一次
         await asyncio.sleep(60)
+
+# 周期性日志维护任务
+async def log_maintenance_task():
+    """周期性日志维护任务"""
+    try:
+        while True:
+            # 每小时执行一次
+            await asyncio.sleep(3600)  # 3600秒 = 1小时
+            
+            logger.info("执行日志维护任务")
+            
+            # 检查日志文件
+            check_log_file()
+            
+            # 备份日志
+            backup_logs()
+            
+            # 每天午夜左右（0:30）强制执行一次日志轮转，确保日志按天分割
+            current_hour = datetime.now().hour
+            current_minute = datetime.now().minute
+            if current_hour == 0 and current_minute >= 30 and current_minute < 35:
+                logger.info("执行每日日志轮转")
+                force_log_rotation()
+            
+    except Exception as e:
+        logger.error(f"日志维护任务异常: {e}", exc_info=True)
 
 # 定义生命周期管理器
 @asynccontextmanager
@@ -124,35 +96,55 @@ async def lifespan(app: FastAPI):
     await init_db()
 
     # 启动状态更新后台任务
-    task = asyncio.create_task(status_update_task())
+    status_task = asyncio.create_task(status_update_task())
+    
+    # 启动日志维护任务
+    log_task = asyncio.create_task(log_maintenance_task())
+    
+    logger.info("后台任务已启动")
 
     yield
 
     # 关闭时执行
-    task.cancel()
+    status_task.cancel()
+    log_task.cancel()
     try:
-        await task
+        await status_task
+        await log_task
     except asyncio.CancelledError:
-        logger.info("状态更新任务已取消")
+        logger.info("后台任务已取消")
 
+    # 关闭日志处理器
+    for handler in logger.handlers:
+        handler.close()
+        
     logger.info("应用关闭 / Application shut down")
 
 # 创建FastAPI应用
 app = FastAPI(
     title=APP_NAME[DEFAULT_LANGUAGE],
     description="设备预定系统 / Equipment Reservation System",
-    lifespan=lifespan
+    lifespan=lifespan,
+    default_response_class=JSONResponse
 )
 
-# 设置CORS
+# 设置默认JSON响应类设置
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*", "http://localhost:8080"],
+    allow_origins=["*"],  # 允许所有来源，包括局域网IP
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["*"]
 )
+
+# 自定义JSON响应处理
+@app.middleware("http")
+async def add_utf8_content_type(request, call_next):
+    response = await call_next(request)
+    if response.headers.get("content-type") == "application/json":
+        response.headers["content-type"] = "application/json; charset=utf-8"
+    return response
 
 # 设置国际化中间件
 setup_i18n()
@@ -175,6 +167,7 @@ from backend.routes.statistics import router as statistics_router
 from backend.routes.upload import router as upload_router
 from backend.routes.calendar import router as calendar_router
 from backend.routes.db_admin import router as db_admin_router  # 导入数据库表查看路由
+from backend.routes.announcements import router as announcements_router
 
 # 注册路由
 app.include_router(equipment_router)
@@ -186,6 +179,7 @@ app.include_router(statistics_router)
 app.include_router(upload_router)
 app.include_router(calendar_router)
 app.include_router(db_admin_router)  # 注册数据库表查看路由
+app.include_router(announcements_router)
 
 @app.get("/")
 def root(request: Request):
@@ -212,7 +206,7 @@ def health_check():
             "version": "1.0.0"
         }
     except Exception as e:
-        logger.error(f"健康检查失败: {str(e)}")
+        logger.error(f"健康检查失败: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"健康检查失败: {str(e)}")
 
 @app.get("/language/{lang}")
