@@ -75,23 +75,6 @@
         </el-menu-item>
       </el-menu>
       <div class="admin-mobile-nav-footer">
-        <!-- 添加语言切换按钮 -->
-        <div class="mobile-language-buttons">
-          <button
-            class="mobile-lang-btn"
-            :class="{ active: currentLanguage === 'zh-CN' }"
-            @click="handleLanguageChange('zh-CN')"
-          >
-            中文
-          </button>
-          <button
-            class="mobile-lang-btn"
-            :class="{ active: currentLanguage === 'en' }"
-            @click="handleLanguageChange('en')"
-          >
-            English
-          </button>
-        </div>
         <el-button type="primary" plain icon="el-icon-s-home" size="small" @click="handleCommand('home')">返回首页</el-button>
         <el-button type="danger" plain icon="el-icon-switch-button" size="small" @click="handleCommand('logout')">退出登录</el-button>
       </div>
@@ -184,26 +167,7 @@
             <i class="el-icon-user"></i>
             <span>{{ displayUsername }}</span>
           </div>
-
-          <!-- 添加语言切换按钮 -->
-          <div class="language-switcher">
-            <button
-              class="lang-btn"
-              :class="{ active: currentLanguage === 'zh-CN' }"
-              @click="handleLanguageChange('zh-CN')"
-            >
-              中文
-            </button>
-            <span class="divider">|</span>
-            <button
-              class="lang-btn"
-              :class="{ active: currentLanguage === 'en' }"
-              @click="handleLanguageChange('en')"
-            >
-              English
-            </button>
-          </div>
-
+          
           <el-button type="primary" plain icon="el-icon-s-home" size="small" @click="handleCommand('home')" class="home-btn">返回首页</el-button>
           <el-button type="danger" plain icon="el-icon-switch-button" size="small" @click="handleCommand('logout')" class="logout-btn">退出登录</el-button>
         </div>
