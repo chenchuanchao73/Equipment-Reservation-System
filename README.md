@@ -78,7 +78,6 @@ pip install -r requirements.txt
 cd frontend
 npm install
 npm run serve
-cd ..
 
 # 4. 启动系统
 python start.py
