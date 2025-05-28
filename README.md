@@ -12,7 +12,6 @@
 
 *A modern equipment reservation management system designed for schools and enterprises*
 
-[功能特性](#-功能特性) • [快速开始](#-快速开始) • [安装指南](#-安装指南) • [演示](#-演示) • [贡献](#-贡献)
 
 </div>
 
