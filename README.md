@@ -322,7 +322,7 @@ git commit -m "docs: 更新API文档"
 
 *⭐ If this project helps you, please give us a star!*
 
-**📧 联系我们 | Contact Us**: [your-email@example.com](mailto:your-email@example.com)
+**📧 联系我们 | Contact Us**: [chen.chuanchao@htschools.org]
 
 ---
 
