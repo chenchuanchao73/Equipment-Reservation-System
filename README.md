@@ -55,6 +55,29 @@
 <tr>
 <td width="50%">
 
+### 前端 (Frontend)
+
+- **框架**: Vue.js 2.x
+- **UI组件库**: Element UI
+- **状态管理**: Vuex
+- **路由**: Vue Router
+- **HTTP客户端**: Axios
+- **国际化**: vue-i18n
+- **移动端适配**:
+  - 响应式设计
+  - 媒体查询
+
+### 后端 (Backend)
+
+- **框架**: Python 3.8+ 与 FastAPI
+- **数据库**: SQLite
+- **ORM**: SQLAlchemy
+- **API文档**: Swagger UI (FastAPI内置)
+- **国际化**: python-i18n
+- **邮件支持**: aiosmtplib
+- **日志系统**: concurrent-log-handler
+
+
 ## 🚀 快速开始 | Quick Start
 
 ### 📋 系统要求 | System Requirements
