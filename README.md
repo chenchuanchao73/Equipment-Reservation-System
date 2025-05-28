@@ -68,7 +68,7 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/your-username/equipment-reservation-system.git
+git clone https://github.com/chenchuanchao73/Equipment-Reservation-System.git
 cd equipment-reservation-system
 
 # 2. 安装后端依赖
@@ -223,7 +223,7 @@ python start.py
 
 ```bash
 # 1. Fork 项目并克隆
-git clone https://github.com/your-username/equipment-reservation-system.git
+git clone https://github.com/chenchuanchao73/Equipment-Reservation-System.git
 
 # 2. 创建功能分支
 git checkout -b feature/your-feature-name
@@ -284,9 +284,9 @@ git commit -m "docs: 更新API文档"
 
 ### 🔗 相关链接 | Related Links
 
-- **项目主页** | Project Home: [GitHub Repository](https://github.com/your-username/equipment-reservation-system)
-- **问题追踪** | Issue Tracker: [GitHub Issues](https://github.com/your-username/equipment-reservation-system/issues)
-- **功能请求** | Feature Requests: [GitHub Discussions](https://github.com/your-username/equipment-reservation-system/discussions)
+- **项目主页** | Project Home: [GitHub Repository](https://github.com/chenchuanchao73/Equipment-Reservation-System.git)
+- **问题追踪** | Issue Tracker: [GitHub Issues](https://github.com/chenchuanchao73/Equipment-Reservation-System/issues)
+- **功能请求** | Feature Requests: [GitHub Discussions](https://github.com/chenchuanchao73/Equipment-Reservation-System/discussions)
 
 ### 📊 项目状态 | Project Status
 
