@@ -185,8 +185,31 @@
 
           <p class="success-message">{{ $t('reservation.saveReservationCode') }}</p>
 
-          <div class="reservation-code">
-            {{ reservationCode }}
+          <!-- 预定码单独显示在最上方 -->
+          <div class="reservation-code-container">
+            <span class="reservation-code">{{ reservationCode || '无预约码' }}</span>
+          </div>
+
+          <div class="reservation-info-box">
+            <div class="reservation-info-item">
+              <span class="info-label">{{ $t('reservation.equipmentName') }}:</span>
+              <span>{{ reservationInfo.equipment_name }}</span>
+            </div>
+
+            <div class="reservation-info-item">
+              <span class="info-label">{{ $t('reservation.startTime') }}:</span>
+              <span>{{ formatDateTimeString(reservationInfo.start_datetime) }}</span>
+            </div>
+
+            <div class="reservation-info-item">
+              <span class="info-label">{{ $t('reservation.endTime') }}:</span>
+              <span>{{ formatDateTimeString(reservationInfo.end_datetime) }}</span>
+            </div>
+
+            <div class="reservation-info-item">
+              <span class="info-label">{{ $t('reservation.userName') }}:</span>
+              <span>{{ reservationInfo.user_name }}</span>
+            </div>
           </div>
 
           <p class="reservation-tip">{{ $t('reservation.reservationCodeTip') }}</p>
@@ -251,11 +274,19 @@ export default {
       timeConflict: false,
       successDialogVisible: false,
       reservationCode: '',
+      reservationNumber: '',
+      reservationInfo: {
+        equipment_name: '',
+        start_datetime: null,
+        end_datetime: null,
+        user_name: '',
+        reservation_number: ''
+      },
+      reservationType: 'single',
       qrcodeUrl: null, // 二维码功能已移除
 
       // 表单数据
       form: {
-        reservationType: 'single',
         startDateTime: null,
         endDateTime: null,
         userName: '',
@@ -267,6 +298,10 @@ export default {
 
       // 表单验证规则
       rules: {
+        reservationType: [
+          { required: true, message: this.$t('reservation.requiredField'), trigger: 'change' }
+        ],
+
         startDateTime: [
           { required: true, validator: validateTime, trigger: 'change' }
         ],
@@ -284,6 +319,7 @@ export default {
           { required: true, message: this.$t('reservation.requiredField'), trigger: 'blur' }
         ],
         userEmail: [
+          { required: true, message: this.$t('reservation.requiredField'), trigger: 'blur' },
           { validator: validateEmail, trigger: 'blur' }
         ]
       },
@@ -300,7 +336,7 @@ export default {
           if (!this.form.startDateTime) {
             return time.getTime() < Date.now() - 8.64e7;
           }
-          
+
           // 获取选择日期的年月日部分（不含时间）
           const selectedDate = new Date(time.getFullYear(), time.getMonth(), time.getDate());
           const startDate = new Date(
@@ -308,19 +344,19 @@ export default {
             this.form.startDateTime.getMonth(),
             this.form.startDateTime.getDate()
           );
-          
+
           // 如果日期早于开始日期，则禁用
           if (selectedDate < startDate) {
             return true;
           }
-          
+
           // 如果是同一天，检查一下当前是否为00:00（一天的开始）
           // 如果是00:00，可以选择，因为用户可以设置晚于开始时间的结束时间
           // 如果不是00:00，说明这是日期选择器显示的时间，不是用户最终选择的时间，可以允许选择
           if (selectedDate.getTime() === startDate.getTime()) {
             return false; // 同一天也可以选择
           }
-          
+
           return false; // 允许选择晚于开始日期的所有日期
         }
       }
@@ -357,18 +393,53 @@ export default {
         return
       }
 
+      // 添加更严格的验证
+      if (this.form.startDateTime >= this.form.endDateTime) {
+        this.$message.warning(this.$t('reservation.invalidTime'))
+        this.timeConflict = true
+        return
+      }
+
       try {
         const equipmentId = this.equipment.id
         const startDate = this.formatDateTime(this.form.startDateTime)
         const endDate = this.formatDateTime(this.form.endDateTime)
 
+        // 添加日志
+        console.log('检查时间可用性:', {
+          equipmentId,
+          startDate,
+          endDate,
+          startDateTime: this.form.startDateTime,
+          endDateTime: this.form.endDateTime
+        })
+
         const response = await equipmentApi.getAvailability(equipmentId, startDate, endDate)
 
-        // 检查是否有冲突
-        this.timeConflict = response.data.available.includes(false)
+        // 添加日志
+        console.log('可用性检查结果:', response.data)
+
+        // 检查是否有冲突 - 处理新的API响应格式
+        if (response.data.specific_time_check) {
+          // 如果是具体时间段检查
+          console.log('具体时间段检查结果:', response.data.available)
+          this.timeConflict = response.data.available.includes(false)
+        } else {
+          // 如果是按日期检查
+          console.log('按日期检查结果:', response.data.available)
+          this.timeConflict = response.data.available.includes(false)
+        }
+
+        if (this.timeConflict) {
+          console.log('检测到时间冲突:', response.data.available)
+          this.$message.warning(this.$t('reservation.timeConflict'))
+        } else {
+          console.log('时间段可用')
+        }
       } catch (error) {
         console.error('Failed to check availability:', error)
         this.timeConflict = true
+        this.$message.error(this.$t('common.error'))
       }
     },
 
@@ -383,12 +454,24 @@ export default {
     // 格式化日期时间
     formatDateTime(date) {
       if (!date) return null
+
+      // 确保date是一个有效的Date对象
+      if (!(date instanceof Date) || isNaN(date.getTime())) {
+        console.error('无效的日期对象:', date)
+        return null
+      }
+
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       const hours = String(date.getHours()).padStart(2, '0')
       const minutes = String(date.getMinutes()).padStart(2, '0')
-      return `${year}-${month}-${day} ${hours}:${minutes}:00`
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+
+      const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+      console.log('格式化日期时间:', date, '->', formattedDateTime)
+
+      return formattedDateTime
     },
 
     // 提交表单
@@ -413,17 +496,61 @@ export default {
             lang: this.$i18n.locale
           }
 
-          const response = await reservationApi.createReservation(reservationData)
+          console.log("发送预约数据:", JSON.stringify(reservationData));
+          const response = await reservationApi.createReservation(reservationData);
 
-          if (response.data.success) {
-            this.reservationCode = response.data.data.reservation_code
+          // 详细记录API响应
+          console.log("API响应状态:", response.status);
+          console.log("API响应数据:", JSON.stringify(response.data));
+
+          if (response.data && response.data.success) {
+            // 检查响应数据结构
+            console.log("API响应成功，详细信息:", JSON.stringify(response.data, null, 2));
+
+            const responseData = response.data.data;
+            console.log("提取的响应数据:", JSON.stringify(responseData, null, 2));
+
+            // 观察后端响应模型字段，特别检查reservation_number字段
+            console.log("获取的预约号信息:");
+            console.log("- reservation_code:", responseData.reservation_code);
+            console.log("- reservation_number:", responseData.reservation_number);
+
+            // 从后端模型中我们知道reservation_number是唯一的预约标识
+            // reservation_code是用于关联相同循环预约的
+            // 对于查看详情，我们应该使用reservation_number
+
+            // 设置预定码和预约序号
+            this.reservationCode = responseData.reservation_code || '';
+            this.reservationNumber = responseData.reservation_number || '';
+
+            console.log("设置的预约序号:", this.reservationNumber);
+            console.log("设置的预定码:", this.reservationCode);
+
+                          // 检查预定码是否设置成功
+              if (!this.reservationCode) {
+                console.error("警告: 预定码为空! API响应数据:", JSON.stringify(response.data));
+              }
+
+            // 确保所有字段都被正确赋值
+            this.reservationInfo = {
+              equipment_name: responseData.equipment_name || this.equipment.name,
+              start_datetime: responseData.start_datetime || this.formatDateTime(this.form.startDateTime),
+              end_datetime: responseData.end_datetime || this.formatDateTime(this.form.endDateTime),
+              user_name: responseData.user_name || this.form.userName,
+              reservation_number: this.reservationNumber // 添加预约序号到预约信息中
+            }
+
+            console.log("设置的预约信息:", JSON.stringify(this.reservationInfo));
+
+            // 显示成功对话框
             this.successDialogVisible = true
             this.$refs.reservationForm.resetFields()
           } else {
+            console.error("API响应失败:", response.data.message || "未知错误");
             this.$message.error(response.data.message || this.$t('reservation.createFailed'))
           }
         } catch (error) {
-          console.error('Failed to create reservation:', error)
+          console.error('创建预约失败，错误详情:', error)
           this.$message.error(this.$t('reservation.createFailed'))
         } finally {
           this.submitting = false
@@ -437,9 +564,33 @@ export default {
       this.timeConflict = false
     },
 
-    // 查看预定详情
-    viewReservation() {
-      this.$router.push(`/reservation/${this.reservationCode}`)
+      // 查看预定详情
+  viewReservation() {
+    // 记录当前预约号
+    console.log("查看预定详情，当前预约号:", this.reservationNumber);
+
+    // 确保预约号存在
+    if (!this.reservationNumber) {
+      console.error("错误: 预约号为空，无法查看预定详情");
+      this.$message.error(this.$t('reservation.reservationNotFound'));
+      return;
+    }
+
+      // 添加详细的日志信息
+      console.log("准备跳转到预定详情页面");
+      console.log("跳转URL:", `/reservation/number/${this.reservationNumber}`);
+      console.log("完整状态:", {
+        reservationCode: this.reservationCode,
+        reservationNumber: this.reservationNumber,
+        reservationInfo: this.reservationInfo,
+        dialogVisible: this.successDialogVisible
+      });
+
+      // 跳转到预定详情页面，使用reservation_number查询
+      this.$router.push({
+        path: `/reservation/number/${this.reservationNumber}`,
+        query: { _t: new Date().getTime() } // 添加时间戳防止缓存
+      });
     },
 
     // 关闭成功对话框
@@ -459,6 +610,40 @@ export default {
 
       // 否则拼接基础URL
       return `${this.baseUrl}${url}`;
+    },
+
+    // 格式化显示日期时间
+    formatDisplayDateTime(date) {
+      if (!date) return '';
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    },
+
+    // 格式化日期时间字符串
+    formatDateTimeString(dateTimeStr) {
+      if (!dateTimeStr) return '';
+
+      // 假设输入格式为 YYYY-MM-DD HH:MM:SS 或 YYYY-MM-DDTHH:MM:SS
+      try {
+        // 处理ISO格式的日期时间
+        if (dateTimeStr.includes('T')) {
+          const date = new Date(dateTimeStr);
+          if (isNaN(date.getTime())) {
+            return dateTimeStr.substring(0, 16).replace('T', ' '); // 简单地替换T为空格
+          }
+          return this.formatDisplayDateTime(date);
+        }
+
+        // 处理标准格式的日期时间
+        return dateTimeStr.substring(0, 16); // 返回 YYYY-MM-DD HH:MM 部分
+      } catch (e) {
+        console.error('日期格式化错误:', e);
+        return dateTimeStr; // 出错时返回原始字符串
+      }
     }
   }
 }
@@ -474,7 +659,7 @@ export default {
 .page-title {
   font-size: 24px;
   margin-bottom: 20px;
-  color: #303133;
+  /* 不设置颜色，使用全局CSS中的颜色 */
 }
 
 .back-link {
@@ -520,17 +705,17 @@ export default {
 .equipment-name {
   font-size: 20px;
   margin: 0 0 10px 0;
-  color: #303133;
+  color: #303133; /* 亮色主题下的颜色 */
 }
 
 .equipment-category {
-  color: #606266;
   margin: 0 0 10px 0;
+  color: #606266; /* 亮色主题下的颜色 */
 }
 
 .equipment-location {
-  color: #606266;
   margin-bottom: 10px;
+  color: #606266; /* 亮色主题下的颜色 */
 }
 
 .form-card {
@@ -555,23 +740,67 @@ export default {
 .success-message {
   font-size: 18px;
   margin-bottom: 20px;
+  color: #303133; /* 亮色主题下的颜色 */
+}
+
+.reservation-info-box {
+  background-color: #f5f7fa;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.reservation-info-item {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.info-label {
+  font-weight: bold;
+  margin-right: 8px;
+  min-width: 80px;
+  flex-shrink: 0;
+  text-align: right;
 }
 
 .reservation-code {
   font-size: 24px;
   font-weight: bold;
   color: #409eff;
-  padding: 10px;
-  background-color: white;
-  margin-bottom: 10px;
+  background-color: #ecf5ff;
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: 2px solid #b3d8ff;
+  letter-spacing: 2px;
+  text-shadow: 0 0 1px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  display: block;
+  margin: 10px auto;
+  text-align: center;
+  max-width: 90%;
+}
+
+.reservation-code-item {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px dashed #e6e6e6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .reservation-tip {
-  color: #909399;
   margin-bottom: 20px;
+  color: #909399; /* 亮色主题下的颜色 */
 }
 
 .dialog-footer {
   margin-top: 20px;
+}
+
+.reservation-code-container {
+  margin-bottom: 20px;
 }
 </style>

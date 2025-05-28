@@ -71,6 +71,9 @@
           <el-button @click="resetFilter" icon="el-icon-refresh-left">
             {{ $t('common.reset') }}
           </el-button>
+          <el-button type="success" icon="el-icon-download" @click="showExportDialog">
+            导出数据
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -202,7 +205,7 @@
       <div class="pagination-container" v-if="reservations.length > 0">
         <el-pagination
           background
-          layout="prev, pager, next"
+          :layout="paginationLayout"
           :total="total"
           :page-size="pageSize"
           :current-page.sync="currentPage"
@@ -210,6 +213,65 @@
         ></el-pagination>
       </div>
     </el-card>
+
+    <!-- 导出对话框 -->
+    <el-dialog
+      title="导出预约数据"
+      :visible.sync="exportDialogVisible"
+      width="600px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="exportForm" label-width="120px">
+        <!-- 导出格式 -->
+        <el-form-item label="导出格式">
+          <div style="padding: 8px 0;">
+            <i class="el-icon-document"></i>
+            <span style="margin-left: 8px;">CSV格式 (.csv)</span>
+            <div style="font-size: 12px; color: #999; margin-top: 4px; margin-left: 24px;">
+              支持Excel打开，包含完整的中文字段名
+            </div>
+          </div>
+        </el-form-item>
+
+        <!-- 导出范围 -->
+        <el-form-item label="导出范围">
+          <el-radio-group v-model="exportForm.scope">
+            <el-radio label="current">当前页面数据 ({{ reservations.length }} 条)</el-radio>
+            <el-radio label="all">全部筛选结果 ({{ total }} 条)</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <!-- 选择字段 -->
+        <el-form-item label="导出字段">
+          <div style="max-height: 200px; overflow-y: auto; border: 1px solid #dcdfe6; padding: 10px;">
+            <el-checkbox
+              v-model="selectAllFields"
+              @change="handleSelectAllFields"
+              style="margin-bottom: 10px; font-weight: bold;"
+            >
+              全选
+            </el-checkbox>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+              <el-checkbox
+                v-for="field in availableFields"
+                :key="field.key"
+                v-model="exportForm.selectedFields"
+                :label="field.key"
+              >
+                {{ field.label }}
+              </el-checkbox>
+            </div>
+          </div>
+        </el-form-item>
+      </el-form>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="exportDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleExport" :loading="exportLoading">
+          {{ exportLoading ? '导出中...' : '确认导出' }}
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -234,13 +296,58 @@ export default {
         dateRange: []
       },
       // 添加一个保存页面状态的变量
-      savedState: null
+      savedState: null,
+      // 响应式布局相关
+      isMobile: window.innerWidth <= 768,
+      // 导出相关
+      exportDialogVisible: false,
+      exportLoading: false,
+      exportForm: {
+        format: 'csv',
+        scope: 'current',
+        selectedFields: []
+      },
+      selectAllFields: true,
+      availableFields: [
+        { key: 'id', label: 'ID' },
+        { key: 'reservation_number', label: '预约编号' },
+        { key: 'reservation_code', label: '预约码' },
+        { key: 'equipment_name', label: '设备名称' },
+        { key: 'equipment_category', label: '设备类别' },
+        { key: 'equipment_location', label: '设备位置' },
+        { key: 'user_name', label: '预约人姓名' },
+        { key: 'user_department', label: '预约人部门' },
+        { key: 'user_contact', label: '联系方式' },
+        { key: 'user_email', label: '邮箱地址' },
+        { key: 'start_datetime', label: '开始时间' },
+        { key: 'end_datetime', label: '结束时间' },
+        { key: 'purpose', label: '使用目的' },
+        { key: 'status', label: '预约状态' },
+        { key: 'created_at', label: '创建时间' }
+      ]
+    }
+  },
+
+  computed: {
+    // 根据屏幕宽度动态调整分页组件布局
+    paginationLayout() {
+      return this.isMobile
+        ? 'prev, next'
+        : 'prev, pager, next';
     }
   },
 
   created() {
     // 检查是否有保存的状态并恢复它
     this.restoreState();
+
+    // 添加窗口大小变化的监听器
+    window.addEventListener('resize', this.handleResize);
+  },
+
+  beforeDestroy() {
+    // 移除窗口大小变化的监听器
+    window.removeEventListener('resize', this.handleResize);
   },
 
   // 添加activated钩子函数，在组件被激活时调用（如从预定详情页面返回）
@@ -276,6 +383,11 @@ export default {
   },
 
   methods: {
+    // 处理窗口大小变化
+    handleResize() {
+      this.isMobile = window.innerWidth <= 768;
+    },
+
     async fetchData() {
       this.loading = true
       console.log('Fetching data with filter:', this.filter);
@@ -683,6 +795,106 @@ export default {
             }
           }
         }
+      }
+    },
+
+    // 显示导出对话框
+    showExportDialog() {
+      this.exportDialogVisible = true
+      // 默认选择所有字段
+      this.exportForm.selectedFields = this.availableFields.map(field => field.key)
+      this.selectAllFields = true
+    },
+
+    // 处理全选字段
+    handleSelectAllFields(value) {
+      if (value) {
+        this.exportForm.selectedFields = this.availableFields.map(field => field.key)
+      } else {
+        this.exportForm.selectedFields = []
+      }
+    },
+
+    // 处理导出
+    async handleExport() {
+      if (this.exportForm.selectedFields.length === 0) {
+        this.$message.warning('请至少选择一个导出字段')
+        return
+      }
+
+      this.exportLoading = true
+      try {
+        // 构建导出请求数据
+        const exportData = {
+          export_format: this.exportForm.format,
+          export_scope: this.exportForm.scope,
+          selected_fields: this.exportForm.selectedFields
+        }
+
+        // 如果是导出全部筛选结果，添加筛选条件
+        if (this.exportForm.scope === 'all') {
+          exportData.reservation_code = this.filter.code || undefined
+          exportData.user_name = this.filter.userName || undefined
+          exportData.status = this.filter.status || undefined
+
+          if (this.filter.dateRange && this.filter.dateRange.length === 2) {
+            exportData.from_date = this.filter.dateRange[0]
+            exportData.to_date = this.filter.dateRange[1]
+          }
+        } else {
+          // 导出当前页面数据
+          exportData.current_data = this.reservations.map(reservation => ({
+            id: reservation.id,
+            reservation_number: reservation.reservation_number,
+            reservation_code: reservation.reservation_code,
+            equipment_name: reservation.equipment_name,
+            equipment_category: reservation.equipment_category,
+            equipment_location: reservation.equipment_location,
+            user_name: reservation.user_name,
+            user_department: reservation.user_department,
+            user_contact: reservation.user_contact,
+            user_email: reservation.user_email,
+            start_datetime: reservation.start_datetime,
+            end_datetime: reservation.end_datetime,
+            purpose: reservation.purpose,
+            status: reservation.status,
+            created_at: reservation.created_at
+          }))
+        }
+
+        console.log('导出请求数据:', exportData)
+
+        // 调用导出API
+        const response = await reservationApi.exportReservations(exportData)
+
+        // 创建下载链接
+        const blob = new Blob([response.data], {
+          type: this.exportForm.format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+
+        // 设置文件名
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')
+        const extension = this.exportForm.format === 'csv' ? 'csv' : 'xlsx'
+        link.download = `预约数据_${timestamp}.${extension}`
+
+        // 触发下载
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        this.$message.success('导出成功')
+        this.exportDialogVisible = false
+
+      } catch (error) {
+        console.error('导出失败:', error)
+        this.$message.error('导出失败: ' + (error.response?.data?.detail || error.message))
+      } finally {
+        this.exportLoading = false
       }
     }
   }

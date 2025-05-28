@@ -85,7 +85,7 @@
     <div class="pagination-container">
       <el-pagination
         background
-        layout="total, prev, pager, next"
+        :layout="paginationLayout"
         :total="total"
         :current-page.sync="currentPage"
         :page-size="pageSize"
@@ -145,6 +145,8 @@ export default {
       filter: {
         search: ''
       },
+      // 响应式布局相关
+      isMobile: window.innerWidth <= 768,
 
       dialogVisible: false,
       dialogType: 'add', // 'add' or 'edit'
@@ -163,11 +165,25 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['getToken'])
+    ...mapGetters(['getToken']),
+
+    // 根据屏幕宽度动态调整分页组件布局
+    paginationLayout() {
+      return this.isMobile
+        ? 'prev, next'
+        : 'total, prev, pager, next';
+    }
   },
 
   created() {
     this.fetchData()
+    // 添加窗口大小变化的监听器
+    window.addEventListener('resize', this.handleResize)
+  },
+
+  beforeDestroy() {
+    // 移除窗口大小变化的监听器
+    window.removeEventListener('resize', this.handleResize)
   },
 
   methods: {
@@ -203,6 +219,11 @@ export default {
     handlePageChange(page) {
       this.currentPage = page
       this.fetchData()
+    },
+
+    // 处理窗口大小变化
+    handleResize() {
+      this.isMobile = window.innerWidth <= 768
     },
 
     // 添加类别

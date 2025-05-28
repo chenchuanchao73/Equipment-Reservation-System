@@ -32,6 +32,20 @@
         </div>
 
         <el-descriptions :column="2" border>
+          <el-descriptions-item :label="$t('reservation.number')">
+            {{ reservation.reservation_number || '-' }}
+          </el-descriptions-item>
+
+          <el-descriptions-item :label="$t('reservation.reservationType')">
+            <el-tag
+              size="medium"
+              :type="reservation.recurring_reservation_id ? 'primary' : 'success'"
+              effect="plain"
+            >
+              {{ reservation.recurring_reservation_id ? $t('reservation.recurringReservation') : $t('reservation.singleReservation') }}
+            </el-tag>
+          </el-descriptions-item>
+
           <el-descriptions-item :label="$t('reservation.code')">
             {{ reservation.reservation_code }}
           </el-descriptions-item>
@@ -82,11 +96,22 @@
         </el-descriptions>
 
         <div class="actions">
+          <!-- 已确认且未开始的预约才显示修改按钮 -->
+          <el-button
+            v-if="displayStatusText === $t('reservation.confirmed') && !isReservationStarted"
+            type="primary"
+            @click="handleModify"
+            style="margin-right: 10px;"
+          >
+            {{ $t('reservation.modifyReservation') }}
+          </el-button>
+
           <!-- 已确认且未开始的预约才显示取消按钮 -->
           <el-button
             v-if="displayStatusText === $t('reservation.confirmed')"
             type="danger"
             @click="handleCancel"
+            style="margin-right: 10px;"
           >
             {{ $t('reservation.cancelReservation') }}
           </el-button>
@@ -96,8 +121,27 @@
             v-if="displayStatusText === $t('reservation.inUse')"
             type="primary"
             @click="handleReturn"
+            style="margin-right: 10px;"
           >
             {{ $t('reservation.earlyReturn') }}
+          </el-button>
+
+          <!-- 查看循环预约按钮，只有循环预约才显示 -->
+          <el-button
+            v-if="reservation.recurring_reservation_id"
+            type="warning"
+            @click="viewRecurringReservation"
+            style="margin-right: 10px;"
+          >
+            {{ $t('reservation.viewRecurringReservation') }}
+          </el-button>
+
+          <!-- 查看历史记录按钮，所有状态都显示 -->
+          <el-button
+            type="info"
+            @click="showHistory"
+          >
+            {{ $t('reservation.viewHistory') }}
           </el-button>
         </div>
       </el-card>
@@ -128,6 +172,116 @@
         <el-button type="primary" @click="confirmReturn" :loading="submitting">{{ $t('common.confirm') }}</el-button>
       </span>
     </el-dialog>
+
+    <!-- 修改预定对话框 -->
+    <el-dialog
+      :title="$t('reservation.modifyReservation')"
+      :visible.sync="modifyDialogVisible"
+      width="600px"
+    >
+      <el-form
+        ref="modifyForm"
+        :model="modifyForm"
+        :rules="modifyRules"
+        label-width="120px"
+        v-loading="modifying"
+      >
+        <!-- 开始时间 -->
+        <el-form-item :label="$t('reservation.startTime')" prop="startDateTime">
+          <el-date-picker
+            v-model="modifyForm.startDateTime"
+            type="datetime"
+            :placeholder="$t('reservation.selectStartTime')"
+            style="width: 100%"
+            :picker-options="dateTimePickerOptions"
+            value-format="yyyy-MM-ddTHH:mm:ss"
+            format="yyyy-MM-dd HH:mm:ss"
+          ></el-date-picker>
+        </el-form-item>
+
+        <!-- 结束时间 -->
+        <el-form-item :label="$t('reservation.endTime')" prop="endDateTime">
+          <el-date-picker
+            v-model="modifyForm.endDateTime"
+            type="datetime"
+            :placeholder="$t('reservation.selectEndTime')"
+            style="width: 100%"
+            :picker-options="dateTimePickerOptions"
+            value-format="yyyy-MM-ddTHH:mm:ss"
+            format="yyyy-MM-dd HH:mm:ss"
+          ></el-date-picker>
+        </el-form-item>
+
+        <!-- 使用目的 -->
+        <el-form-item :label="$t('reservation.purpose')">
+          <el-input
+            v-model="modifyForm.purpose"
+            :placeholder="$t('reservation.purposePlaceholder')"
+          ></el-input>
+        </el-form-item>
+
+        <!-- 用户邮箱 -->
+        <el-form-item :label="$t('reservation.userEmail')" prop="userEmail">
+          <el-input
+            v-model="modifyForm.userEmail"
+            :placeholder="$t('reservation.emailPlaceholder')"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="modifyDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitModifyForm" :loading="modifying">{{ $t('common.submit') }}</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 修改历史记录对话框 -->
+    <el-dialog
+      :title="$t('reservation.modificationHistory')"
+      :visible.sync="historyDialogVisible"
+      width="700px"
+    >
+      <div v-loading="loadingHistory">
+        <el-empty v-if="processedHistoryRecords.length === 0" :description="$t('reservation.noHistory')"></el-empty>
+        <el-timeline v-else>
+          <el-timeline-item
+            v-for="(group, index) in processedHistoryRecords"
+            :key="index"
+            type="primary"
+          >
+            <el-card class="history-card">
+              <!-- 修改时间显示在最上面 -->
+              <div class="history-time">
+                <i class="el-icon-time"></i> {{ formatDateTime(group.timestamp) }}
+              </div>
+
+              <div class="history-user">
+                {{ group.user_type === 'admin' ? $t('reservation.admin') : $t('reservation.user') }}
+                {{ group.user_id ? ': ' + group.user_id : '' }}
+              </div>
+
+              <div v-for="(record, recordIndex) in group.records" :key="recordIndex" class="history-item">
+                <div class="history-action">
+                  {{ getHistoryActionText(record.action) }}
+                  <span class="history-field">{{ getFieldDisplayName(record.field_name) }}</span>
+                </div>
+                <div class="history-values">
+                  <div class="history-old-value">
+                    <span class="history-label">{{ $t('reservation.oldValue') }}:</span>
+                    <span>{{ formatHistoryValue(record.field_name, record.old_value) }}</span>
+                  </div>
+                  <div class="history-new-value">
+                    <span class="history-label">{{ $t('reservation.newValue') }}:</span>
+                    <span>{{ formatHistoryValue(record.field_name, record.new_value) }}</span>
+                  </div>
+                </div>
+              </div>
+            </el-card>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
+    </el-dialog>
+
+
   </div>
 </template>
 
@@ -142,9 +296,15 @@ export default {
     return {
       loading: false,
       submitting: false,
+      modifying: false,
       reservation: null,
       cancelDialogVisible: false,
       returnDialogVisible: false,
+      modifyDialogVisible: false,
+      // 历史记录相关
+      historyDialogVisible: false,
+      historyRecords: [],
+      loadingHistory: false,
       // 强制显示状态值 - 用于覆盖计算属性的显示
       forcedStatusText: null,
       forcedStatusType: null,
@@ -154,7 +314,34 @@ export default {
       statusUpdated: false,
       forcedStatus: null,
       // 添加特定预约状态缓存标识
-      reservationStatusCacheKey: ''
+      reservationStatusCacheKey: '',
+      // 修改预定表单数据
+      modifyForm: {
+        startDateTime: '',
+        endDateTime: '',
+        purpose: '',
+        userEmail: ''
+      },
+
+      // 修改预定表单验证规则
+      modifyRules: {
+        startDateTime: [
+          { required: true, message: '请选择开始时间', trigger: 'change' }
+        ],
+        endDateTime: [
+          { required: true, message: '请选择结束时间', trigger: 'change' }
+        ],
+        userEmail: [
+          { required: true, message: '请输入邮箱', trigger: 'blur' },
+          { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+        ]
+      },
+      // 日期时间选择器配置
+      dateTimePickerOptions: {
+        disabledDate: (time) => {
+          return time.getTime() < Date.now() - 8.64e7; // 8.64e7是一天的毫秒数
+        }
+      }
     }
   },
 
@@ -197,6 +384,16 @@ export default {
   },
 
   computed: {
+    // 判断预约是否已开始
+    isReservationStarted() {
+      if (!this.reservation) return false
+
+      const now = new Date()
+      const startTime = new Date(this.reservation.start_datetime)
+
+      return now >= startTime
+    },
+
     getStatusTagText() {
       if (!this.reservation) return ''
 
@@ -329,6 +526,38 @@ export default {
     formattedEndTime() {
       if (!this.reservation) return '';
       return this.formatDateTime(this.reservation.end_datetime);
+    },
+
+    // 处理历史记录，按时间分组并过滤掉不需要显示的字段
+    processedHistoryRecords() {
+      if (!this.historyRecords || this.historyRecords.length === 0) {
+        return []
+      }
+
+      // 过滤掉 lang 字段的修改记录
+      const filteredRecords = this.historyRecords.filter(record =>
+        record.field_name !== 'lang'
+      )
+
+      // 按照修改时间分组
+      const groupedRecords = {}
+      filteredRecords.forEach(record => {
+        const timestamp = record.created_at
+        if (!groupedRecords[timestamp]) {
+          groupedRecords[timestamp] = {
+            timestamp: timestamp,
+            user_type: record.user_type,
+            user_id: record.user_id,
+            records: []
+          }
+        }
+        groupedRecords[timestamp].records.push(record)
+      })
+
+      // 转换为数组并按时间倒序排序
+      return Object.values(groupedRecords).sort((a, b) => {
+        return new Date(b.timestamp) - new Date(a.timestamp)
+      })
     }
   },
 
@@ -457,9 +686,9 @@ export default {
           }
         }
 
-        // 使用API进行请求，直接传递预定码和参数
-        console.log('Calling API with code and params:', code, params)
-        const response = await reservationApi.getReservationByCode(code, params)
+        // 使用API进行请求 - 注意：getReservationByCode的第二个参数应该是预约序号，不是params对象
+        console.log('Calling API with code and reservationNumber:', code, reservationNumber)
+        const response = await reservationApi.getReservationByCode(code, reservationNumber)
 
         console.log('API Response:', response)
 
@@ -582,8 +811,25 @@ export default {
           console.log('查询结束时间:', endTime);
         }
 
-        // 获取预约信息
-        const response = await this.$api.reservation.getReservationByCode(code, params);
+        // 获取预约信息 - 使用新的API方法来正确处理查询参数
+        let response;
+
+        // 检查是否有预约序号参数
+        const reservationNumber = this.$route.query.reservationNumber;
+        if (reservationNumber) {
+          console.log('使用预约序号查询:', reservationNumber);
+          // 使用预约序号查询
+          response = await this.$api.reservation.getReservationByCode(code, reservationNumber);
+        } else if (startTime || endTime) {
+          console.log('使用时间参数查询:', { start_time: startTime, end_time: endTime });
+          // 使用时间参数查询
+          response = await this.$api.reservation.getReservationByCodeWithParams(code, params);
+        } else {
+          console.log('使用预约码查询，不传递额外参数');
+          // 只使用预约码查询
+          response = await this.$api.reservation.getReservationByCode(code);
+        }
+
         console.log('预约API响应:', response);
 
         if (response.success) {
@@ -697,6 +943,79 @@ export default {
       return now >= start && now <= end
     },
 
+    // 处理修改预约按钮点击
+    handleModify() {
+      // 初始化修改表单数据
+      this.modifyForm = {
+        startDateTime: this.reservation.start_datetime,
+        endDateTime: this.reservation.end_datetime,
+        purpose: this.reservation.purpose || '',
+        userEmail: this.reservation.user_email || ''
+      }
+
+      // 显示修改对话框
+      this.modifyDialogVisible = true
+    },
+
+    // 验证时间范围
+    validateTimeRange() {
+      const startTime = new Date(this.modifyForm.startDateTime)
+      const endTime = new Date(this.modifyForm.endDateTime)
+
+      if (startTime >= endTime) {
+        this.$message.error(this.$t('reservation.invalidTime'))
+        return false
+      }
+
+      return true
+    },
+
+    // 提交修改表单
+    async submitModifyForm() {
+      try {
+        // 验证表单
+        await this.$refs.modifyForm.validate()
+
+        // 验证时间范围
+        if (!this.validateTimeRange()) return
+
+        this.modifying = true
+
+        // 构建更新数据
+        const updateData = {
+          start_datetime: this.modifyForm.startDateTime,
+          end_datetime: this.modifyForm.endDateTime,
+          purpose: this.modifyForm.purpose || undefined,
+          user_email: this.modifyForm.userEmail || undefined,
+          lang: this.$i18n.locale
+        }
+
+        // 调用更新API - 传递预约序号以确保修改正确的子预约
+        const response = await reservationApi.updateReservation(
+          this.reservation.reservation_code,
+          updateData,
+          this.reservation.reservation_number  // 传递预约序号
+        )
+
+        if (response.data.success) {
+          this.$message.success(this.$t('reservation.updateSuccess'))
+          this.modifyDialogVisible = false
+          // 重新获取预定信息
+          await this.fetchReservation()
+
+          // 设置强制刷新标记，以便在返回列表页时刷新数据
+          localStorage.setItem('force_refresh_reservation_list', 'true')
+        } else {
+          this.$message.error(response.data.message || this.$t('reservation.updateFailed'))
+        }
+      } catch (error) {
+        console.error('修改预约失败:', error)
+        this.$message.error(this.$t('error.serverError'))
+      } finally {
+        this.modifying = false
+      }
+    },
+
     handleCancel() {
       this.cancelDialogVisible = true
     },
@@ -719,7 +1038,7 @@ export default {
 
           // 准备取消请求数据
           const data = {}
-          
+
           // 添加预约序号参数，确保只取消特定的子预约
           if (reservationNumber) {
             data.reservation_number = reservationNumber
@@ -940,9 +1259,24 @@ export default {
     },
 
     goBack() {
-      // 使用浏览器的历史记录返回，而不是直接跳转
-      if (window.history.length > 1) {
-        this.$router.go(-1); // 返回上一页
+      // 检查是否是从循环预约详情页面返回
+      const fromRecurring = this.$route.query.fromRecurring === 'true';
+
+      if (fromRecurring) {
+        // 如果是从循环预约详情页面返回，直接跳转到预约管理页面
+        this.$router.push('/admin/reservation');
+      } else if (window.history.length > 1) {
+        // 在返回前，设置一个标记，表示这个页面是从预约详情页面返回的
+        // 这样可以防止在返回后再次进入循环预约详情页面
+        localStorage.setItem('returning_from_detail', 'true');
+
+        // 使用浏览器的历史记录返回
+        this.$router.go(-1);
+
+        // 设置一个定时器，在一段时间后清除标记
+        setTimeout(() => {
+          localStorage.removeItem('returning_from_detail');
+        }, 2000);
       } else {
         // 如果没有历史记录，则导航到预定管理页面
         this.$router.push('/admin/reservation');
@@ -1319,6 +1653,104 @@ export default {
         return false;
       }
     },
+    // 显示历史记录
+    async showHistory() {
+      if (!this.reservation) return
+
+      this.historyDialogVisible = true
+      this.loadingHistory = true
+
+      try {
+        // 传递预约码和预约序号
+        const response = await this.$api.reservation.getReservationHistory(
+          this.reservation.reservation_code,
+          this.reservation.reservation_number
+        )
+
+        if (response.data && response.data.success) {
+          this.historyRecords = response.data.data
+        } else {
+          const errorMsg = response.data ? response.data.message : this.$t('reservation.historyFetchFailed')
+          this.$message.error(errorMsg)
+          this.historyRecords = []
+        }
+      } catch (error) {
+        console.error('获取历史记录失败:', error)
+        this.$message.error(this.$t('error.serverError'))
+        this.historyRecords = []
+      } finally {
+        this.loadingHistory = false
+      }
+    },
+
+    // 获取字段显示名称
+    getFieldDisplayName(fieldName) {
+      const fieldMap = {
+        'start_datetime': this.$t('reservation.startTime'),
+        'end_datetime': this.$t('reservation.endTime'),
+        'purpose': this.$t('reservation.purpose'),
+        'user_name': this.$t('reservation.userName'),
+        'user_contact': this.$t('reservation.userContact'),
+        'user_department': this.$t('reservation.userDepartment'),
+        'user_email': this.$t('reservation.userEmail'),
+        'status': this.$t('reservation.status'),
+        'lang': this.$t('common.language')
+      }
+
+      return fieldMap[fieldName] || fieldName
+    },
+
+    // 获取历史记录操作文本
+    getHistoryActionText(action) {
+      const actionMap = {
+        'update': this.$t('reservation.modified'),
+        'create': this.$t('reservation.created'),
+        'delete': this.$t('reservation.deleted'),
+        'status_change': this.$t('reservation.statusChanged')
+      }
+
+      return actionMap[action] || action
+    },
+
+    // 格式化历史记录值
+    formatHistoryValue(fieldName, value) {
+      if (!value) return '-'
+
+      if (fieldName === 'start_datetime' || fieldName === 'end_datetime') {
+        return this.formatDateTime(value)
+      } else if (fieldName === 'status') {
+        const statusMap = {
+          'confirmed': this.$t('reservation.confirmed'),
+          'cancelled': this.$t('reservation.cancelled'),
+          'in_use': this.$t('reservation.inUse'),
+          'expired': this.$t('reservation.expired')
+        }
+        return statusMap[value] || value
+      }
+
+      return value
+    },
+
+    // 查看循环预约详情
+    viewRecurringReservation() {
+      if (!this.reservation || !this.reservation.recurring_reservation_id) return;
+
+      // 检查是否有返回标记，如果有则不进行跳转
+      if (localStorage.getItem('returning_from_detail') === 'true') {
+        console.log('检测到从详情页返回，阻止再次进入循环预约详情');
+        return;
+      }
+
+      // 跳转到循环预约详情页面，并传递来源信息和预约码
+      this.$router.push({
+        path: `/recurring-reservation/${this.reservation.recurring_reservation_id}`,
+        query: {
+          fromAdmin: 'true',
+          reservationCode: this.reservation.reservation_code,
+          fromRecurring: 'false' // 标记不是从循环预约详情页面来的
+        }
+      });
+    }
   }
 }
 </script>
@@ -1384,5 +1816,75 @@ export default {
   .el-descriptions-item {
     width: 100%;
   }
+}
+
+/* 历史记录样式 */
+.history-card {
+  margin-bottom: 10px;
+}
+
+.history-time {
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #ff7640;
+  font-size: 16px;
+  border-bottom: 1px solid #EBEEF5;
+  padding-bottom: 10px;
+}
+
+.history-user {
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #606266;
+}
+
+.history-item {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed #ebeef5;
+}
+
+.history-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.history-action {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.history-field {
+  color: #409eff;
+}
+
+.history-values {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 10px;
+  font-size: 13px;
+}
+
+.history-old-value, .history-new-value {
+  display: flex;
+  align-items: flex-start;
+}
+
+.history-old-value {
+  color: #F56C6C;
+}
+
+.history-new-value {
+  color: #67C23A;
+}
+
+.history-label {
+  font-weight: bold;
+  margin-right: 10px;
+  min-width: 80px;
+  color: #606266;
 }
 </style>

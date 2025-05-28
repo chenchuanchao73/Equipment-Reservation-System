@@ -2,6 +2,7 @@ export default {
   // Common
   common: {
     appName: 'Equipment Reservation System',
+    fullAppName: 'HTNIA Equipment Reservation System',
     loading: 'Loading...',
     success: 'Success',
     downloadSuccess: 'Download successful',
@@ -34,7 +35,14 @@ export default {
     month: 'Month',
     notProvided: 'Not Provided',
     id: 'ID',
-    view: 'View'
+    lengthLimit: 'Length Limit',
+    view: 'View',
+    toggleTheme: 'Toggle Dark/Light Theme',
+    darkMode: 'Dark Mode',
+    lightMode: 'Light Mode',
+    useBrowserLanguage: 'Use Browser Language',
+    total: 'Total',
+    items: 'items'
   },
 
   // Navigation
@@ -52,7 +60,7 @@ export default {
   // Home
   home: {
     welcome: 'Welcome to Equipment Reservation System',
-    description: 'This is a simple and easy-to-use equipment reservation system where you can reserve various equipment from the school IT department.',
+    description: 'This is a simple and easy-to-use equipment reservation system where you can reserve various equipment and places from the school.',
     reserveEquipment: 'Reserve Equipment',
     queryReservation: 'Query Reservation',
     instructions: 'Instructions',
@@ -72,12 +80,13 @@ export default {
     calendarViewDesc: 'View equipment reservations through an intuitive calendar interface to better plan your reservation time.',
     viewCalendar: 'View Calendar',
     publicQuery: 'Public Reservation Query',
+    queryResults: 'Query Results',
     noRecordsFound: 'No matching reservation records found'
   },
 
   // Equipment
   equipment: {
-    description: 'Browse and reserve various equipment available in our system.',
+    description: 'Browse and reserve various equipment available in the system.',
     list: 'Equipment List',
     detail: 'Equipment Detail',
     name: 'Equipment Name',
@@ -87,22 +96,26 @@ export default {
     status: 'Status',
     description: 'Description',
     userGuide: 'User Guide',
-    userGuidePlaceholder: 'Please enter detailed usage steps, precautions and other information...',
+    userGuidePlaceholder: 'Please enter detailed usage steps, precautions, etc.',
     videoTutorial: 'Video Tutorial',
-    videoTutorialPlaceholder: 'Please enter video link, supporting YouTube, Bilibili, etc.',
+    image: 'Equipment Image',
+    videoTutorialPlaceholder: 'Please enter video link, supports YouTube, Bilibili, etc.',
     available: 'Available',
     maintenance: 'Maintenance',
     inUse: 'In Use',
     reserve: 'Reserve This Equipment',
-    viewDetail: 'View Detail',
-    noDescription: 'No description',
+    viewDetail: 'View Details',
+    noDescription: 'No Description',
     filter: 'Filter',
     allCategories: 'All Categories',
     allStatus: 'All Status',
-    searchPlaceholder: 'Search equipment name, model or location',
+    searchPlaceholder: 'Search for equipment name, model or location',
     currentReservations: 'Current Reservations',
     noReservations: 'No reservation records',
-    equipmentInfo: 'Equipment Information'
+    equipmentInfo: 'Equipment Information',
+    simultaneousReservation: 'Simultaneous Reservation',
+    simultaneousReservationInfo: 'Simultaneous Reservation Info',
+    simultaneousReservationDesc: 'This equipment allows up to {max} people to reserve simultaneously. You can make a reservation even during time slots that already have reservations.'
   },
 
   // Reservation
@@ -110,7 +123,9 @@ export default {
     description: 'Create, manage and track your equipment reservations easily.',
     queryDescription: 'Find your reservation details using reservation code or contact information.',
     form: 'Reservation Form',
+    recurringForm: 'Recurring Reservation',
     detail: 'Reservation Detail',
+    recurringDetail: 'Recurring Reservation Detail',
     query: 'Query Reservation',
     publicQuery: 'Public Query',
     personalManagement: 'Personal Reservation Management',
@@ -165,6 +180,14 @@ export default {
     returnFailed: 'Return failed',
     createSuccess: 'Reservation created successfully',
     updateSuccess: 'Reservation updated',
+    updateFailed: 'Failed to update reservation',
+    modifyReservation: 'Modify Reservation',
+    selectStartTime: 'Select start time',
+    selectEndTime: 'Select end time',
+    startTimeRequired: 'Please select start time',
+    endTimeRequired: 'Please select end time',
+    purposePlaceholder: 'Please enter purpose (optional)',
+    emailPlaceholder: 'Please enter email for reservation notifications',
     queryPlaceholder: 'Please enter reservation code',
     contactPlaceholder: 'Please enter the contact used when reserving',
     codeOrContactRequired: 'Please enter reservation code (or contact)',
@@ -184,6 +207,17 @@ export default {
     saveReservationCode: 'Please save your reservation code',
     viewDetail: 'View Reservation Details',
     reservationCodeTip: 'You can use the reservation code to query, modify or cancel the reservation.',
+    viewHistory: 'View History',
+    modificationHistory: 'Modification History',
+    noHistory: 'No modification history',
+    historyFetchFailed: 'Failed to fetch history',
+    oldValue: 'Old Value',
+    newValue: 'New Value',
+    modified: 'Modified',
+    created: 'Created',
+    deleted: 'Deleted',
+    admin: 'Admin',
+    user: 'User',
 
     // Reservation Type
     reservationType: 'Reservation Type',
@@ -225,7 +259,25 @@ export default {
     cancelRecurringReservation: 'Cancel Recurring Reservation',
     cancelRecurringReservationConfirm: 'Are you sure you want to cancel this recurring reservation? This will cancel all unfinished reservations.',
     emailForConfirmation: 'Email for confirmation',
-    pattern: 'Reservation Pattern'
+    pattern: 'Reservation Pattern',
+    // Conflict information
+    conflictAlert: 'Some reservations could not be created due to time conflicts',
+    totalPlanned: 'Total planned reservations',
+    createdCount: 'Successfully created',
+    skippedCount: 'Skipped due to conflicts',
+    conflictDates: 'Conflict dates',
+    // Time conflict related
+    timeConflictWith: 'Selected time slot conflicts with {count} reservation(s)',
+    timeSlotOccupied: 'Selected time slot is already reserved',
+    timeSlotAvailable: 'This time slot is available',
+    conflictWithFollowing: 'Conflicts with the following reservations:',
+    conflictTime: 'Time:',
+    conflictUser: 'User:',
+    conflictEmail: 'Email:',
+    conflictPhone: 'Phone:',
+    conflictPurpose: 'Purpose:',
+    conflictTo: 'to',
+    maxSimultaneousReached: 'Maximum simultaneous reservations ({count}) reached for this time slot'
   },
 
   // Admin
@@ -305,6 +357,12 @@ export default {
     partOfRecurringReservation: 'This is part of a recurring reservation',
     reservationInfo: 'Reservation Information',
     selectEquipment: 'Select Equipment to Filter',
-    allEquipment: 'All Equipment'
+    allEquipment: 'All Equipment',
+    statusLegend: 'Reservation Status Legend',
+    confirmedStatus: 'Green indicates confirmed reservations',
+    inUseStatus: 'Blue indicates reservations currently in use',
+    cancelTip: 'Click on a reservation and enter the reservation code to cancel it',
+    updateTip: 'Click on a reservation and enter the reservation code to update it'
+
   }
 }

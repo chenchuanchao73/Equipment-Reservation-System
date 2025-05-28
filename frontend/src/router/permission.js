@@ -18,13 +18,14 @@ const whiteList = [
   '/404'
 ]
 
-// 路由前置守卫
-router.beforeEach((to, from, next) => {
-  // 开始进度条
-  NProgress.start()
+// 更新页面标题的函数
+export const updatePageTitle = () => {
+  // 获取当前路由
+  const currentRoute = router.currentRoute
+  if (!currentRoute) return
 
-  // 设置页面标题
-  let pageTitle = to.meta.title || ''
+  let pageTitle = currentRoute.meta.title || ''
+  let appName = 'HTNIA设备预定系统' // 默认值
 
   // 如果标题是i18n键值（包含点号），则使用i18n进行翻译
   if (pageTitle && pageTitle.includes('.')) {
@@ -38,7 +39,22 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  document.title = pageTitle ? `${pageTitle} - HTNIA设备预定系统` : 'HTNIA设备预定系统'
+  // 尝试获取国际化的应用名称
+  try {
+    if (router.app && router.app.$i18n) {
+      appName = router.app.$i18n.t('common.fullAppName')
+    }
+  } catch (e) {
+    console.error('Failed to translate app name:', e)
+  }
+
+  document.title = pageTitle ? `${pageTitle} - ${appName}` : appName
+}
+
+// 路由前置守卫
+router.beforeEach((to, from, next) => {
+  // 开始进度条
+  NProgress.start()
 
   // 获取用户登录状态
   const hasToken = store.getters.isLoggedIn
@@ -74,6 +90,11 @@ router.beforeEach((to, from, next) => {
 router.afterEach(() => {
   // 结束进度条
   NProgress.done()
+
+  // 设置页面标题 - 在路由完成后设置，确保i18n已初始化
+  setTimeout(() => {
+    updatePageTitle()
+  }, 0)
 })
 
 export default router

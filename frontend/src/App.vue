@@ -20,6 +20,7 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import AnnouncementBar from '@/components/common/AnnouncementBar.vue'
 import { fetchAnnouncements } from '@/api/announcement'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'App',
@@ -34,12 +35,14 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['isDarkMode']),
     isAdminRoute() {
       return this.$route.path.startsWith('/admin')
     }
   },
   created() {
     this.loadAnnouncements()
+    this.applyTheme()
   },
   methods: {
     async loadAnnouncements() {
@@ -50,6 +53,27 @@ export default {
       } catch (error) {
         console.error('加载公告失败:', error)
       }
+    },
+    applyTheme() {
+      // 应用暗色主题
+      if (this.isDarkMode) {
+        document.documentElement.classList.add('dark-mode')
+      } else {
+        document.documentElement.classList.remove('dark-mode')
+      }
+    }
+  },
+  watch: {
+    isDarkMode: {
+      handler(newValue) {
+        // 当isDarkMode变化时重新应用主题
+        if (newValue) {
+          document.documentElement.classList.add('dark-mode')
+        } else {
+          document.documentElement.classList.remove('dark-mode')
+        }
+      },
+      immediate: true
     }
   }
 }
@@ -67,33 +91,37 @@ body {
   margin: 0 !important;
   padding: 0 !important;
   overflow-x: hidden !important;
+  min-height: 100vh;
 }
 
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  height: 100vh;
   width: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
 }
 
 #app {
-  height: 100%;
+  height: 100vh;
   width: 100vw;
   max-width: 100vw;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .el-container {
-  height: 100%;
+  height: 100vh;
   width: 100%;
   max-width: 100%;
   padding: 0;
   margin: 0;
-  overflow-x: hidden;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .el-header {
@@ -106,6 +134,7 @@ html, body {
   overflow: hidden;
   background-color: #FFFFFF !important;
   border-bottom: 1px solid #EBEEF5;
+  flex-shrink: 0;
 }
 
 .el-main {
@@ -113,22 +142,65 @@ html, body {
   background-color: #f5f7fa;
   width: 100%;
   max-width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .el-footer {
   padding: 20px;
   background-color: #f5f7fa;
   border-top: 1px solid #e6e6e6;
+  flex-shrink: 0;
 }
 
 /* 响应式调整 */
 @media (max-width: 768px) {
   .el-main {
     padding: 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* 在移动端，header高度为0，所以main区域需要为footer留出空间 */
+    max-height: calc(100vh - 80px); /* 只减去footer的高度 */
+    flex: 1;
   }
 
   .el-footer {
     padding: 10px;
+    flex-shrink: 0;
+    min-height: 60px; /* 确保footer有最小高度 */
+    background-color: #f5f7fa;
+    border-top: 1px solid #e6e6e6;
+  }
+
+  .el-header {
+    height: 0 !important; /* 移动端header高度为0，但不完全隐藏，保留MobileNav */
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important; /* 允许MobileNav悬浮按钮显示 */
+  }
+
+  /* 确保移动端不能滚动超过footer */
+  html, body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  #app {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  .el-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -245,7 +317,7 @@ html, body {
   z-index: 2000;
 }
 
-/* 当公告栏显示时，给header和页面内容添加上边距 */
+/* 当公告栏显示时，给header添加上边距 */
 .announcement-fixed + .el-container .el-header {
   margin-top: 40px;
 }

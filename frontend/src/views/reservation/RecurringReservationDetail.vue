@@ -36,69 +36,59 @@
         <div class="reservation-info">
           <div class="info-section">
             <h3>{{ $t('reservation.reservationInfo') }}</h3>
-            <div class="info-row">
-              <span class="info-label">{{ $t('reservation.code') }}:</span>
-              <span class="info-value">{{ recurringReservation.reservation_code }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">{{ $t('reservation.pattern') }}:</span>
-              <span class="info-value">{{ getPatternText(recurringReservation.pattern_type) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">{{ $t('reservation.dateRange') }}:</span>
-              <span class="info-value">{{ formatDate(recurringReservation.start_date) }} - {{ formatDate(recurringReservation.end_date) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">{{ $t('reservation.timeRange') }}:</span>
-              <span class="info-value">{{ formatTime(recurringReservation.start_time) }} - {{ formatTime(recurringReservation.end_time) }}</span>
-            </div>
-            <div class="info-row" v-if="recurringReservation.days_of_week && recurringReservation.days_of_week.length > 0">
-              <span class="info-label">{{ $t('reservation.daysOfWeek') }}:</span>
-              <span class="info-value">{{ formatDaysOfWeek(recurringReservation.days_of_week) }}</span>
-            </div>
-            <div class="info-row" v-if="recurringReservation.days_of_month && recurringReservation.days_of_month.length > 0">
-              <span class="info-label">{{ $t('reservation.daysOfMonth') }}:</span>
-              <span class="info-value">{{ formatDaysOfMonth(recurringReservation.days_of_month) }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">{{ $t('reservation.purpose') }}:</span>
-              <span class="info-value">{{ recurringReservation.purpose || $t('common.notProvided') }}</span>
-            </div>
-          </div>
-
-          <div class="info-section">
-            <h3>{{ $t('equipment.equipmentInfo') }}</h3>
-            <div class="info-row">
-              <span class="info-label">{{ $t('equipment.name') }}:</span>
-              <span class="info-value">{{ recurringReservation.equipment_name }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">{{ $t('equipment.category') }}:</span>
-              <span class="info-value">{{ recurringReservation.equipment_category }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">{{ $t('equipment.location') }}:</span>
-              <span class="info-value">{{ recurringReservation.equipment_location || $t('common.notProvided') }}</span>
-            </div>
-          </div>
-
-          <div class="info-section">
-            <h3>{{ $t('reservation.userInfo') }}</h3>
-            <div class="info-row">
-              <span class="info-label">{{ $t('reservation.userName') }}:</span>
-              <span class="info-value">{{ recurringReservation.user_name }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">{{ $t('reservation.userDepartment') }}:</span>
-              <span class="info-value">{{ recurringReservation.user_department }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">{{ $t('reservation.userContact') }}:</span>
-              <span class="info-value">{{ recurringReservation.user_contact }}</span>
-            </div>
-            <div class="info-row" v-if="recurringReservation.user_email">
-              <span class="info-label">{{ $t('reservation.userEmail') }}:</span>
-              <span class="info-value">{{ recurringReservation.user_email }}</span>
+            <div class="info-grid">
+              <div class="info-row">
+                <span class="info-label">{{ $t('reservation.code') }}:</span>
+                <span class="info-value">{{ recurringReservation.reservation_code }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ $t('equipment.name') }}:</span>
+                <span class="info-value">{{ recurringReservation.equipment_name }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ $t('equipment.location') }}:</span>
+                <span class="info-value">{{ recurringReservation.equipment_location || $t('common.notProvided') }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ $t('reservation.pattern') }}:</span>
+                <span class="info-value">{{ getPatternText(recurringReservation.pattern_type) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ $t('reservation.dateRange') }}:</span>
+                <span class="info-value date-range-highlight">{{ formatDate(recurringReservation.start_date) }} - {{ formatDate(recurringReservation.end_date) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ $t('reservation.timeRange') }}:</span>
+                <span class="info-value time-range-highlight">{{ formatTime(recurringReservation.start_time) }} - {{ formatTime(recurringReservation.end_time) }}</span>
+              </div>
+              <div class="info-row" v-if="recurringReservation.days_of_week && recurringReservation.days_of_week.length > 0">
+                <span class="info-label">{{ $t('reservation.daysOfWeek') }}:</span>
+                <span class="info-value">{{ formatDaysOfWeek(recurringReservation.days_of_week) }}</span>
+              </div>
+              <div class="info-row" v-if="recurringReservation.days_of_month && recurringReservation.days_of_month.length > 0">
+                <span class="info-label">{{ $t('reservation.daysOfMonth') }}:</span>
+                <span class="info-value">{{ formatDaysOfMonth(recurringReservation.days_of_month) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ $t('reservation.userName') }}:</span>
+                <span class="info-value">{{ recurringReservation.user_name }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ $t('reservation.userDepartment') }}:</span>
+                <span class="info-value">{{ recurringReservation.user_department }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ $t('reservation.userContact') }}:</span>
+                <span class="info-value">{{ recurringReservation.user_contact }}</span>
+              </div>
+              <div class="info-row" v-if="recurringReservation.user_email">
+                <span class="info-label">{{ $t('reservation.userEmail') }}:</span>
+                <span class="info-value">{{ recurringReservation.user_email }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">{{ $t('reservation.purpose') }}:</span>
+                <span class="info-value">{{ recurringReservation.purpose || $t('common.notProvided') }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -124,7 +114,9 @@
         </div>
 
         <div v-else class="child-reservations-list">
+          <!-- 桌面端表格视图 -->
           <el-table
+            v-if="!isMobile"
             :data="childReservations"
             style="width: 100%"
             border
@@ -149,19 +141,19 @@
             <el-table-column
               prop="start_datetime"
               :label="$t('reservation.startTime')"
-              width="150"
+              width="160"
               :formatter="formatDateTime"
             ></el-table-column>
             <el-table-column
               prop="end_datetime"
               :label="$t('reservation.endTime')"
-              width="150"
+              width="160"
               :formatter="formatDateTime"
             ></el-table-column>
             <el-table-column
               prop="status"
               :label="$t('reservation.status')"
-              width="140"
+              width="90"
             >
               <template slot-scope="scope">
                 <el-tag :type="getChildStatusType(scope.row)" size="medium">
@@ -171,27 +163,114 @@
             </el-table-column>
             <el-table-column
               :label="$t('common.actions')"
-              width="150"
+              width="180"
+              align="center"
             >
               <template slot-scope="scope">
-                <el-button
-                  size="mini"
-                  type="primary"
-                  @click="viewChildReservation(scope.row)"
-                  icon="el-icon-view"
-                  circle
-                ></el-button>
-                <el-button
-                  size="mini"
-                  type="danger"
-                  @click="cancelChildReservation(scope.row)"
-                  :disabled="scope.row.status === 'cancelled' || scope.row.status === 'expired'"
-                  icon="el-icon-delete"
-                  circle
-                ></el-button>
+                <div class="action-buttons-container">
+                  <el-button
+                    size="mini"
+                    type="primary"
+                    @click="viewChildReservation(scope.row)"
+                    icon="el-icon-view"
+                    circle
+                  ></el-button>
+                  <el-button
+                    size="mini"
+                    type="warning"
+                    @click="editChildReservation(scope.row)"
+                    :disabled="scope.row.status === 'cancelled' || scope.row.status === 'expired' || isReservationStarted(scope.row)"
+                    icon="el-icon-edit"
+                    circle
+                  ></el-button>
+                  <el-button
+                    size="mini"
+                    type="danger"
+                    @click="cancelChildReservation(scope.row)"
+                    :disabled="scope.row.status === 'cancelled' || scope.row.status === 'expired'"
+                    icon="el-icon-delete"
+                    circle
+                  ></el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
+
+          <!-- 移动端卡片视图 -->
+          <div v-else class="mobile-card-container">
+            <div
+              v-for="(reservation, index) in childReservations"
+              :key="reservation.id"
+              class="child-reservation-mobile-card"
+              :class="{ 'highlighted-card': highlightReservationNumber && reservation.reservation_number === highlightReservationNumber }"
+            >
+              <div class="card-header">
+                <div class="card-title">
+                  <span class="reservation-index">#{{ index + 1 }}</span>
+                  <el-tag
+                    :type="getChildStatusType(reservation)"
+                    size="small"
+                    class="status-tag"
+                  >
+                    {{ getChildStatusText(reservation) }}
+                  </el-tag>
+                </div>
+                <div class="reservation-number">{{ reservation.reservation_number }}</div>
+              </div>
+
+              <div class="card-content">
+                <div class="info-row">
+                  <span class="label">{{ $t('reservation.code') }}:</span>
+                  <span class="value reservation-code-value">{{ reservation.reservation_code }}</span>
+                </div>
+
+                <div class="time-info">
+                  <div class="time-row">
+                    <i class="el-icon-time"></i>
+                    <span class="time-label">{{ $t('reservation.startTime') }}:</span>
+                    <span class="time-value">{{ formatDateTime(null, null, reservation.start_datetime) }}</span>
+                  </div>
+                  <div class="time-row">
+                    <i class="el-icon-time"></i>
+                    <span class="time-label">{{ $t('reservation.endTime') }}:</span>
+                    <span class="time-value">{{ formatDateTime(null, null, reservation.end_datetime) }}</span>
+                  </div>
+                </div>
+
+                <div class="card-actions">
+                  <el-button
+                    type="primary"
+                    size="small"
+                    @click="viewChildReservation(reservation)"
+                    class="action-button"
+                  >
+                    <i class="el-icon-view"></i>
+                    {{ $t('common.view') }}
+                  </el-button>
+                  <el-button
+                    type="warning"
+                    size="small"
+                    @click="editChildReservation(reservation)"
+                    :disabled="reservation.status === 'cancelled' || reservation.status === 'expired' || isReservationStarted(reservation)"
+                    class="action-button"
+                  >
+                    <i class="el-icon-edit"></i>
+                    {{ $t('common.edit') }}
+                  </el-button>
+                  <el-button
+                    type="danger"
+                    size="small"
+                    @click="cancelChildReservation(reservation)"
+                    :disabled="reservation.status === 'cancelled' || reservation.status === 'expired'"
+                    class="action-button"
+                  >
+                    <i class="el-icon-delete"></i>
+                    {{ $t('common.cancel') }}
+                  </el-button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </el-card>
     </div>
@@ -239,7 +318,9 @@ export default {
       userEmail: '',
       cancelLoading: false,
       fromChildReservation: false,
-      highlightReservationNumber: null // 用于高亮显示特定的子预约
+      highlightReservationNumber: null, // 用于高亮显示特定的子预约
+      // 响应式布局相关
+      isMobile: window.innerWidth <= 768
     }
   },
 
@@ -264,7 +345,15 @@ export default {
       console.log('高亮显示预约序号:', this.highlightReservationNumber)
     }
 
+    // 添加窗口大小变化的监听器
+    window.addEventListener('resize', this.handleResize)
+
     this.loadRecurringReservation()
+  },
+
+  beforeDestroy() {
+    // 移除窗口大小变化的监听器
+    window.removeEventListener('resize', this.handleResize)
   },
 
   // 添加activated钩子函数，在组件被激活时调用（如从子预约详情页面返回）
@@ -274,6 +363,11 @@ export default {
   },
 
   methods: {
+    // 处理窗口大小变化
+    handleResize() {
+      this.isMobile = window.innerWidth <= 768
+    },
+
     // 加载循环预约详情
     async loadRecurringReservation() {
       this.loading = true
@@ -346,8 +440,35 @@ export default {
 
     // 返回上一页
     goBack() {
-      // 对于所有情况，直接返回到个人预约管理页面
-      window.location.href = '/#/reservation/query'
+      // 检查是否有来源页面参数
+      const fromAdmin = this.$route.query.fromAdmin === 'true';
+      const reservationCode = this.$route.query.reservationCode;
+
+      // 设置一个标记，表示这个页面是从循环预约详情页面返回的
+      if (fromAdmin) {
+        localStorage.setItem('returning_from_recurring', 'true');
+      }
+
+      if (fromAdmin && reservationCode) {
+        // 如果是从管理员预约详情页面来的，返回到该页面，并传递fromRecurring参数
+        this.$router.push({
+          path: `/admin/reservation/${reservationCode}`,
+          query: {
+            fromRecurring: 'true'
+          }
+        });
+      } else if (fromAdmin) {
+        // 如果只知道是从管理员页面来的，但没有具体预约码，返回到管理员预约列表
+        this.$router.push('/admin/reservation');
+      } else {
+        // 默认返回到个人预约管理页面
+        this.$router.push('/reservation/query');
+      }
+
+      // 设置一个定时器，在一段时间后清除标记
+      setTimeout(() => {
+        localStorage.removeItem('returning_from_recurring');
+      }, 2000);
     },
 
     // 查看子预约详情
@@ -441,6 +562,57 @@ export default {
       }
     },
 
+    // 修改子预约
+    editChildReservation(reservation) {
+      // 检查是否有预约序号
+      if (reservation.reservation_number) {
+        console.log('修改子预约:', reservation.reservation_number)
+
+        // 构建查询参数，直接跳转到预约详情页面并进入编辑模式
+        const query = {
+          edit: 'true',  // 添加编辑标记，让预约详情页面直接进入编辑模式
+          child: 'true',  // 标记这是从循环预约详情页面跳转过来的
+          recurringId: this.recurringReservation.id,  // 传递循环预约ID
+          code: reservation.reservation_code,  // 添加预约码作为查询参数
+          from: 'recurring'  // 标记来源是循环预约
+        }
+
+        // 保留用户联系方式参数（如果有）
+        if (this.$route.query.userContact) {
+          query.userContact = this.$route.query.userContact
+        }
+
+        // 保留来源参数（如果有）
+        if (this.$route.query.from) {
+          query.from = this.$route.query.from
+        }
+
+        console.log('editChildReservation - 跳转到子预约详情页面（编辑模式），参数:', query)
+
+        // 跳转到预约详情页面，使用预约序号
+        this.$router.push({
+          path: `/reservation/number/${reservation.reservation_number}`,
+          query: query
+        })
+
+        // 将预约序号和预约码保存到localStorage，以便在页面刷新后仍然可以使用
+        localStorage.setItem('current_reservation_number', reservation.reservation_number)
+        localStorage.setItem('current_reservation_code', reservation.reservation_code)
+      } else {
+        this.$message.warning('无法修改子预约，缺少预约序号')
+      }
+    },
+
+    // 检查预约是否已开始
+    isReservationStarted(reservation) {
+      if (!reservation || !reservation.start_datetime) return false
+
+      const now = new Date()
+      const startTime = new Date(reservation.start_datetime)
+
+      return now >= startTime
+    },
+
     // 取消子预约
     async cancelChildReservation(reservation) {
       try {
@@ -448,7 +620,7 @@ export default {
         console.log('子预约序号:', reservation.reservation_number)
 
         const result = await this.$confirm(
-          this.$t('reservation.cancelConfirmation'),
+          this.$t('reservation.confirmCancel'),
           this.$t('common.warning'),
           {
             confirmButtonText: this.$t('common.confirm'),
@@ -771,6 +943,7 @@ export default {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
+  padding-bottom: 20px; /* 恢复正常的底部边距 */
 }
 
 .loading-container,
@@ -814,9 +987,23 @@ export default {
   padding-bottom: 10px;
 }
 
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+}
+
 .info-row {
   margin-bottom: 10px;
   line-height: 1.5;
+}
+
+/* 移动端单列显示 */
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 .info-label {
@@ -827,6 +1014,18 @@ export default {
 
 .info-value {
   color: #303133;
+}
+
+/* 关键信息高亮样式 - 只保留日期和时间范围的红色高亮 */
+.date-range-highlight {
+  color: #F56C6C !important;
+  font-weight: bold;
+}
+
+.time-range-highlight {
+  color: #F56C6C !important;
+  font-weight: bold;
+  font-size: 15px;
 }
 
 .empty-state {
@@ -850,7 +1049,313 @@ export default {
   margin-top: 20px;
 }
 
+/* 操作按钮容器样式 */
+.action-buttons-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  padding-left: 0;
+}
+
 .highlighted-row {
   background-color: #fdf5e6 !important; /* 浅橙色背景 */
+}
+
+/* 移动端卡片样式 */
+.mobile-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.child-reservation-mobile-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e4e7ed;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.child-reservation-mobile-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.child-reservation-mobile-card.highlighted-card {
+  background-color: #fdf5e6;
+  border: 2px solid #e6a23c;
+  box-shadow: 0 4px 16px rgba(230, 162, 60, 0.2);
+}
+
+.card-header {
+  padding: 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.reservation-index {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.4;
+}
+
+.status-tag {
+  align-self: flex-start;
+  font-weight: 500;
+}
+
+.reservation-number {
+  font-size: 12px;
+  color: #409eff;
+  font-weight: 600;
+  margin-left: 12px;
+  background: #ecf5ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  border: 1px solid #b3d8ff;
+}
+
+.card-content {
+  padding: 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-of-type {
+  border-bottom: none;
+  margin-bottom: 16px;
+}
+
+.info-row .label {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.info-row .value {
+  font-size: 14px;
+  color: #303133;
+  text-align: right;
+  word-break: break-word;
+}
+
+.reservation-code-value {
+  color: #409eff !important;
+  font-weight: 600 !important;
+  background: #ecf5ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  border: 1px solid #b3d8ff;
+  font-size: 14px;
+}
+
+.time-info {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.time-row:last-child {
+  margin-bottom: 0;
+}
+
+.time-row i {
+  color: #409eff;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.time-label {
+  color: #606266;
+  margin-right: 8px;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.time-value {
+  color: #303133;
+  font-weight: 500;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.action-button {
+  flex: 1;
+  font-weight: 500;
+}
+
+/* 桌面端表格操作按钮容器样式 */
+.action-buttons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 移动端响应式样式 */
+@media (max-width: 768px) {
+  .recurring-reservation-detail {
+    padding: 10px 4px 20px 4px !important; /* 减少左右边距，正常的底部边距 */
+    max-width: 100%;
+    overflow-x: hidden; /* 防止水平滚动 */
+  }
+
+  /* 头部操作按钮在移动端的优化 */
+  .header-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .header-actions .el-button {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* 预约信息网格布局在移动端改为单列 */
+  .reservation-info {
+    display: block !important; /* 覆盖网格布局 */
+    gap: 0;
+  }
+
+  .info-section {
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  /* 卡片在移动端的优化 */
+  .reservation-card,
+  .child-reservations-card {
+    margin: 0 -2px 20px -2px; /* 让卡片更宽，与其他页面保持一致 */
+    border-radius: 8px;
+  }
+
+  /* 卡片头部在移动端的优化 */
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .card-header span {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* 信息行在移动端的优化 */
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding: 8px 0;
+  }
+
+  .info-label {
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+
+  .info-value {
+    font-size: 14px;
+    word-break: break-word;
+    width: 100%;
+  }
+
+  /* 移动端卡片容器优化 */
+  .mobile-card-container {
+    margin: 0 -2px; /* 与其他页面保持一致的负边距 */
+    gap: 16px;
+  }
+
+  .child-reservation-mobile-card {
+    margin: 0 2px; /* 给卡片适当的边距 */
+    border-radius: 8px;
+  }
+
+  /* 确保页面内容不会超出屏幕 */
+  .content-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* 空状态在移动端的优化 */
+  .empty-state {
+    padding: 20px 0;
+  }
+
+  /* 取消对话框在移动端的优化 */
+  .cancel-options {
+    padding: 0 10px;
+  }
+
+  /* 确保所有文本内容不会超出容器 */
+  * {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* 对话框在移动端的优化 */
+  .el-dialog {
+    width: 95% !important;
+    margin: 0 auto !important;
+  }
+
+  .el-dialog__body {
+    padding: 15px !important;
+  }
+
+  /* 表单项在移动端的优化 */
+  .el-form-item__label {
+    font-size: 14px !important;
+    margin-bottom: 5px !important;
+  }
+
+  .el-input__inner {
+    font-size: 14px !important;
+  }
+
+  /* 按钮在移动端的优化 */
+  .dialog-footer .el-button {
+    width: 48% !important;
+    margin: 0 1% !important;
+  }
 }
 </style>

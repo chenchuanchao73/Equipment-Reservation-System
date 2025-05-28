@@ -1,0 +1,26 @@
+2025-05-16 00:00:56,595 - root - INFO - 执行预约状态更新任务
+2025-05-16 00:00:56,600 - backend.utils.status_updater - INFO - 当前时间: 2025-05-16 00:00:56.600338
+2025-05-16 00:00:56,600 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=16, 时=0, 分=0, 秒=56
+2025-05-16 00:00:56,601 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-16 00:00:56,601 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-16 00:00:56.600338 AND Reservation.end_datetime > 2025-05-16 00:00:56.600338
+2025-05-16 00:00:56,602 - backend.utils.status_updater - INFO - 找到 2 个应该更新为'使用中'的预约
+2025-05-16 00:00:56,602 - backend.utils.status_updater - INFO - 预约ID: 178, 开始时间: 2025-05-16 00:00:00, 结束时间: 2025-05-16 10:00:00, 当前状态: confirmed
+2025-05-16 00:00:56,603 - backend.utils.status_updater - INFO - 预约ID: 178, 当前时间与开始时间的差值(秒): 56.600338, 结束时间与当前时间的差值(秒): 35943.399662
+2025-05-16 00:00:56,603 - backend.utils.status_updater - INFO - 预约ID: 188, 开始时间: 2025-05-16 00:00:00, 结束时间: 2025-05-17 00:00:00, 当前状态: confirmed
+2025-05-16 00:00:56,603 - backend.utils.status_updater - INFO - 预约ID: 188, 当前时间与开始时间的差值(秒): 56.600338, 结束时间与当前时间的差值(秒): 86343.399662
+2025-05-16 00:00:56,604 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-16 00:00:56,604 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-16 00:00:56.600338
+2025-05-16 00:00:56,604 - backend.utils.status_updater - INFO - 找到 3 个应该更新为'已过期'的预约
+2025-05-16 00:00:56,605 - backend.utils.status_updater - INFO - 预约ID: 181, 开始时间: 2025-05-15 17:25:00, 结束时间: 2025-05-16 00:00:00, 当前状态: in_use
+2025-05-16 00:00:56,605 - backend.utils.status_updater - INFO - 预约ID: 181, 结束时间与当前时间的差值(秒): -56.600338
+2025-05-16 00:00:56,606 - backend.utils.status_updater - INFO - 预约ID: 182, 开始时间: 2025-05-15 17:27:00, 结束时间: 2025-05-16 00:00:00, 当前状态: in_use
+2025-05-16 00:00:56,606 - backend.utils.status_updater - INFO - 预约ID: 182, 结束时间与当前时间的差值(秒): -56.600338
+2025-05-16 00:00:56,606 - backend.utils.status_updater - INFO - 预约ID: 183, 开始时间: 2025-05-15 17:31:00, 结束时间: 2025-05-16 00:00:00, 当前状态: in_use
+2025-05-16 00:00:56,607 - backend.utils.status_updater - INFO - 预约ID: 183, 结束时间与当前时间的差值(秒): -56.600338
+2025-05-16 00:00:56,608 - backend.utils.status_updater - INFO - 执行SQL更新: 将ID在 [181, 182, 183] 中的预约状态更新为'已过期'
+2025-05-16 00:00:56,609 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=2条, 已过期=3条
+2025-05-16 00:00:56,611 - backend.utils.status_updater - INFO - 已更新预约状态: 2个更新为'使用中', 3个更新为'已过期'
+2025-05-16 00:00:56,612 - backend.utils.status_updater - INFO - 更新后的预约状态:
+2025-05-16 00:00:56,612 - backend.utils.status_updater - INFO - ID: 181, 预约序号: RN-20250515-1156, 状态: expired, 开始时间: 2025-05-15 17:25:00, 结束时间: 2025-05-16 00:00:00
+2025-05-16 00:00:56,612 - backend.utils.status_updater - INFO - ID: 182, 预约序号: RN-20250515-1291, 状态: expired, 开始时间: 2025-05-15 17:27:00, 结束时间: 2025-05-16 00:00:00
+2025-05-16 00:00:56,613 - backend.utils.status_updater - INFO - ID: 183, 预约序号: RN-20250515-1493, 状态: expired, 开始时间: 2025-05-15 17:31:00, 结束时间: 2025-05-16 00:00:00

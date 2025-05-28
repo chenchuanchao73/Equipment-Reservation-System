@@ -26,6 +26,9 @@ export default {
   padding: 20px 0;
   background-color: #f5f7fa;
   border-top: 1px solid #e4e7ed;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .footer-content {

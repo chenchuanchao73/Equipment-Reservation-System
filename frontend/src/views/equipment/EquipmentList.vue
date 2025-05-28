@@ -110,20 +110,22 @@
                   {{ $t('equipment.maintenance') }}
                 </el-tag>
                 <el-tag
-                  v-else-if="equipment.currently_reserved"
-                  type="danger"
-                  size="medium"
-                  style="font-weight: bold; padding: 0px 10px; font-size: 14px;"
-                >
-                  {{ $t('equipment.inUse') }}
-                </el-tag>
-                <el-tag
                   v-else
                   type="success"
                   size="medium"
                   style="font-weight: bold; padding: 0px 10px; font-size: 14px;"
                 >
                   {{ $t('equipment.available') }}
+                </el-tag>
+
+                <!-- 可同时预定标记 -->
+                <el-tag
+                  v-if="equipment.allow_simultaneous"
+                  type="primary"
+                  size="mini"
+                  style="margin-left: 5px; font-size: 12px;"
+                >
+                  {{ $t('equipment.simultaneousReservation') }} ({{ equipment.max_simultaneous }})
                 </el-tag>
               </div>
 
@@ -141,7 +143,7 @@
                   type="primary"
                   size="small"
                   @click.stop="reserveEquipment(equipment.id)"
-                  :disabled="equipment.status !== 'available' || equipment.currently_reserved"
+                  :disabled="equipment.status !== 'available'"
                 >
                   {{ $t('equipment.reserve') }}
                 </el-button>
@@ -289,7 +291,7 @@ export default {
 .page-title {
   margin-bottom: 20px;
   font-size: 24px;
-  color: #303133;
+  /* 不设置颜色，使用全局CSS中的颜色 */
 }
 
 .filter-card {

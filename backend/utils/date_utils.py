@@ -2,9 +2,8 @@
 日期处理工具
 Date utilities
 """
-import datetime
-import calendar
 from datetime import date, time, datetime, timedelta, timezone
+import calendar
 import logging
 
 # 设置日志
@@ -12,6 +11,13 @@ logger = logging.getLogger(__name__)
 
 # 北京时区 (UTC+8)
 BEIJING_TIMEZONE = timezone(timedelta(hours=8))
+
+def get_beijing_now():
+    """
+    获取当前北京时间
+    Get current Beijing time
+    """
+    return datetime.now(BEIJING_TIMEZONE)
 
 def convert_to_beijing_time(dt):
     """
@@ -22,11 +28,12 @@ def convert_to_beijing_time(dt):
         return None
 
     try:
-        # 如果datetime对象没有时区信息，假定它是UTC时间
+        # 如果datetime对象没有时区信息，假定它是本地时间（已经是北京时间）
+        # 不进行时区转换，避免重复加8小时
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            return dt
 
-        # 转换为北京时间
+        # 如果有时区信息，转换为北京时间
         beijing_time = dt.astimezone(BEIJING_TIMEZONE)
         return beijing_time
     except Exception as e:
@@ -62,13 +69,53 @@ def parse_datetime(dt_str, format_str="%Y-%m-%d %H:%M"):
     Parse datetime string
     """
     if not dt_str:
+        logger.warning(f"解析日期时间字符串失败: 输入为空")
         return None
 
-    try:
-        return datetime.strptime(dt_str, format_str)
-    except Exception as e:
-        logger.error(f"解析日期时间字符串失败: {e}")
-        return None
+    # 记录原始输入
+    logger.info(f"[调试信息] 解析日期时间字符串: '{dt_str}', 期望格式: '{format_str}'")
+
+    # 确保前端发送的日期格式被放在最前面优先尝试
+    formats = [
+        "%Y-%m-%d %H:%M:%S",  # 优先尝试前端发送的格式
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M",
+        "%Y-%m-%d",  # 纯日期格式放在后面，避免误解析
+        format_str
+    ]
+
+    # 处理可能包含+的日期时间字符串（URL参数）
+    if "+" in dt_str:
+        logger.info(f"[调试信息] 日期时间字符串包含+号，进行替换")
+        dt_str = dt_str.replace("+", " ")
+        logger.info(f"[调试信息] 替换后的字符串: '{dt_str}'")
+
+    # 尝试不同的格式
+    for fmt in formats:
+        try:
+            dt = datetime.strptime(dt_str, fmt)
+            logger.info(f"[调试信息] 成功解析日期时间: '{dt_str}' -> {dt} (使用格式: '{fmt}')")
+
+            # 如果只有日期部分，添加时间部分
+            if fmt == "%Y-%m-%d":
+                if "00:00" in dt_str or "00:00:00" in dt_str:
+                    # 如果字符串中包含00:00，说明是一天的开始
+                    dt = datetime.combine(dt.date(), time.min)
+                    logger.info(f"[调试信息] 添加时间部分(一天的开始): {dt}")
+                elif "23:59" in dt_str or "23:59:59" in dt_str:
+                    # 如果字符串中包含23:59，说明是一天的结束
+                    dt = datetime.combine(dt.date(), time.max)
+                    logger.info(f"[调试信息] 添加时间部分(一天的结束): {dt}")
+
+            return dt
+        except ValueError:
+            logger.debug(f"[调试信息] 使用格式 '{fmt}' 解析 '{dt_str}' 失败，尝试下一个格式")
+            continue
+
+    # 如果所有格式都失败，记录错误并返回None
+    logger.error(f"[调试信息] 解析日期时间字符串失败: 无法解析 '{dt_str}'，尝试了以下格式: {formats}")
+    return None
 
 def get_date_range(start_date, end_date):
     """
@@ -79,10 +126,10 @@ def get_date_range(start_date, end_date):
         return []
 
     try:
-        # 确保start_date和end_date是datetime.date类型
-        if isinstance(start_date, datetime.datetime):
+        # 确保start_date和end_date是date类型
+        if isinstance(start_date, datetime):
             start_date = start_date.date()
-        if isinstance(end_date, datetime.datetime):
+        if isinstance(end_date, datetime):
             end_date = end_date.date()
 
         # 生成日期范围
@@ -90,7 +137,7 @@ def get_date_range(start_date, end_date):
         current_date = start_date
         while current_date <= end_date:
             date_range.append(current_date)
-            current_date += datetime.timedelta(days=1)
+            current_date += timedelta(days=1)
 
         return date_range
     except Exception as e:
@@ -106,12 +153,12 @@ def is_date_in_range(date, start_date, end_date):
         return False
 
     try:
-        # 确保date、start_date和end_date是datetime.date类型
-        if isinstance(date, datetime.datetime):
+        # 确保date、start_date和end_date是date类型
+        if isinstance(date, datetime):
             date = date.date()
-        if isinstance(start_date, datetime.datetime):
+        if isinstance(start_date, datetime):
             start_date = start_date.date()
-        if isinstance(end_date, datetime.datetime):
+        if isinstance(end_date, datetime):
             end_date = end_date.date()
 
         return start_date <= date <= end_date
@@ -133,7 +180,7 @@ def get_datetime_range(start_datetime, end_datetime, interval_minutes=30):
         current_datetime = start_datetime
         while current_datetime <= end_datetime:
             datetime_range.append(current_datetime)
-            current_datetime += datetime.timedelta(minutes=interval_minutes)
+            current_datetime += timedelta(minutes=interval_minutes)
 
         return datetime_range
     except Exception as e:
@@ -175,7 +222,7 @@ def get_next_occurrence_date(start_date, pattern_type, days_of_week=None, days_o
 
         if pattern_type == "daily":
             # 每天，直接返回下一天
-            return current_date + datetime.timedelta(days=1)
+            return current_date + timedelta(days=1)
 
         elif pattern_type == "weekly" and days_of_week:
             # 每周，找到下一个符合条件的星期几
@@ -183,7 +230,7 @@ def get_next_occurrence_date(start_date, pattern_type, days_of_week=None, days_o
             days_to_add = 1
 
             while True:
-                next_date = current_date + datetime.timedelta(days=days_to_add)
+                next_date = current_date + timedelta(days=days_to_add)
                 next_weekday = get_weekday(next_date)
                 if next_weekday in days_of_week:
                     return next_date

@@ -65,12 +65,33 @@
           <i class="el-icon-view"></i>
           <span>数据库表查看</span>
         </el-menu-item>
-        <el-menu-item index="/admin/settings">
-          <i class="el-icon-setting"></i>
-          <span>系统管理</span>
+        <el-menu-item index="/admin/system-logs">
+          <i class="el-icon-document"></i>
+          <span>系统日志</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/accounts">
+          <i class="el-icon-user"></i>
+          <span>账号管理</span>
         </el-menu-item>
       </el-menu>
       <div class="admin-mobile-nav-footer">
+        <!-- 添加语言切换按钮 -->
+        <div class="mobile-language-buttons">
+          <button
+            class="mobile-lang-btn"
+            :class="{ active: currentLanguage === 'zh-CN' }"
+            @click="handleLanguageChange('zh-CN')"
+          >
+            中文
+          </button>
+          <button
+            class="mobile-lang-btn"
+            :class="{ active: currentLanguage === 'en' }"
+            @click="handleLanguageChange('en')"
+          >
+            English
+          </button>
+        </div>
         <el-button type="primary" plain icon="el-icon-s-home" size="small" @click="handleCommand('home')">返回首页</el-button>
         <el-button type="danger" plain icon="el-icon-switch-button" size="small" @click="handleCommand('logout')">退出登录</el-button>
       </div>
@@ -121,7 +142,7 @@
               <i class="el-icon-message-solid"></i>
               <span>公告管理</span>
             </el-menu-item>
-            
+
             <el-submenu index="email">
               <template slot="title">
                 <i class="el-icon-message"></i>
@@ -140,15 +161,20 @@
                 <span>邮件日志</span>
               </el-menu-item>
             </el-submenu>
-            
+
             <el-menu-item index="/admin/db-viewer">
               <i class="el-icon-view"></i>
               <span>数据库表查看</span>
             </el-menu-item>
-            
-            <el-menu-item index="/admin/settings">
-              <i class="el-icon-setting"></i>
-              <span>系统管理</span>
+
+            <el-menu-item index="/admin/system-logs">
+              <i class="el-icon-document"></i>
+              <span>系统日志</span>
+            </el-menu-item>
+
+            <el-menu-item index="/admin/accounts">
+              <i class="el-icon-user"></i>
+              <span>账号管理</span>
             </el-menu-item>
           </el-menu>
         </div>
@@ -158,8 +184,28 @@
             <i class="el-icon-user"></i>
             <span>{{ displayUsername }}</span>
           </div>
-          <el-button type="primary" plain icon="el-icon-s-home" size="small" @click="handleCommand('home')">返回首页</el-button>
-          <el-button type="danger" plain icon="el-icon-switch-button" size="small" @click="handleCommand('logout')">退出登录</el-button>
+
+          <!-- 添加语言切换按钮 -->
+          <div class="language-switcher">
+            <button
+              class="lang-btn"
+              :class="{ active: currentLanguage === 'zh-CN' }"
+              @click="handleLanguageChange('zh-CN')"
+            >
+              中文
+            </button>
+            <span class="divider">|</span>
+            <button
+              class="lang-btn"
+              :class="{ active: currentLanguage === 'en' }"
+              @click="handleLanguageChange('en')"
+            >
+              English
+            </button>
+          </div>
+
+          <el-button type="primary" plain icon="el-icon-s-home" size="small" @click="handleCommand('home')" class="home-btn">返回首页</el-button>
+          <el-button type="danger" plain icon="el-icon-switch-button" size="small" @click="handleCommand('logout')" class="logout-btn">退出登录</el-button>
         </div>
       </el-header>
 
@@ -174,6 +220,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import { updatePageTitle } from '@/router/permission'
 
 export default {
   name: 'AdminLayout',
@@ -198,6 +245,10 @@ export default {
     displayUsername() {
       // 优先显示用户名，如果没有则显示'管理员'
       return this.currentUser && this.currentUser.username ? this.currentUser.username : '管理员'
+    },
+
+    isSuperAdmin() {
+      return this.currentUser && this.currentUser.role === 'superadmin'
     }
   },
 
@@ -221,6 +272,11 @@ export default {
     handleLanguageChange(lang) {
       this.setLanguage(lang)
       this.$i18n.locale = lang
+
+      // 更新页面标题
+      setTimeout(() => {
+        updatePageTitle()
+      }, 0)
     },
 
     handleMobileMenuSelect(key) {
@@ -321,6 +377,32 @@ export default {
   padding: 0 20px;
 }
 
+.language-switcher {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 8px;
+  color: #606266;
+  font-size: 14px;
+}
+
+.lang-btn.active {
+  color: #409EFF;
+  font-weight: bold;
+}
+
+.divider {
+  color: #DCDFE6;
+  margin: 0 5px;
+  opacity: 0.7;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -357,16 +439,31 @@ export default {
   }
 
   .header-menu {
-    justify-content: flex-start;
+    display: none; /* 完全隐藏菜单栏，因为已经集成到侧边悬浮按钮中 */
   }
 
-  .top-menu .el-menu-item span,
-  .top-menu .el-submenu__title span {
-    display: none;
+  .header-right {
+    flex: 1;
+    justify-content: flex-end;
+    padding-right: 10px; /* 减少右侧内边距，让按钮更靠左 */
   }
 
-  .user-info span {
-    display: none;
+  .user-info {
+    margin-right: 8px; /* 减少用户信息右侧间距 */
+  }
+
+  /* 移动端按钮样式优化 */
+  .home-btn, .logout-btn {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .home-btn {
+    margin-right: 5px;
+  }
+
+  .logout-btn {
+    margin-right: 5px; /* 确保退出按钮不会超出屏幕 */
   }
 
   .admin-mobile-nav-overlay {
@@ -420,6 +517,28 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+
+  .mobile-language-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .mobile-lang-btn {
+    flex: 1;
+    background: #304156;
+    border: 1px solid #1f2d3d;
+    color: #bfcbd9;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .mobile-lang-btn.active {
+    background: #1f2d3d;
+    color: #409EFF;
+    font-weight: bold;
   }
   .admin-mobile-nav-toggle {
     position: fixed;

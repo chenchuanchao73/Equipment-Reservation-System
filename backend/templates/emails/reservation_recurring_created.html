@@ -1,4 +1,21 @@
-                                <html><head><meta charset="UTF-8"><title>循环预约创建成功 / Recurring Reservation Created</title></head><body>
+                                <html><head><meta charset="UTF-8"><title>循环预约创建成功 / Recurring Reservation Created</title>
+                                <style>
+                                .conflict-info {
+                                    background-color: #fef0f0;
+                                    border-left: 4px solid #f56c6c;
+                                    padding: 10px;
+                                    margin: 15px 0;
+                                }
+                                .conflict-dates {
+                                    font-family: monospace;
+                                    background-color: #f8f8f8;
+                                    padding: 5px;
+                                    margin: 5px 0;
+                                    max-height: 100px;
+                                    overflow-y: auto;
+                                }
+                                </style>
+                                </head><body>
                                 <h2>循环预约创建成功 / Recurring Reservation Created</h2>
                                 <p>尊敬的 {{ reservation.user_name }}，您的循环设备预约已成功创建。<br>
                                 Dear {{ reservation.user_name }}, your recurring equipment reservation has been created successfully.</p>
@@ -13,6 +30,26 @@
                                 <tr><th>设备描述 / Equipment Description</th><td>{{ reservation.description }}</td></tr>
                                 {% endif %}
                                 </table>
+
+                                {% if reservation.has_conflicts %}
+                                <div class="conflict-info">
+                                    <p><strong>注意 / Note:</strong> 部分预约因时间冲突未能创建。<br>
+                                    Some reservations could not be created due to time conflicts.</p>
+                                    <p>总计划预约数 / Total planned reservations: {{ reservation.total_planned }}<br>
+                                    成功创建数 / Successfully created: {{ reservation.created_count }}<br>
+                                    冲突跳过数 / Skipped due to conflicts: {{ reservation.skipped_count }}</p>
+                                    
+                                    {% if reservation.conflict_dates %}
+                                    <p><strong>冲突日期 / Conflict dates:</strong></p>
+                                    <div class="conflict-dates">
+                                        {% for date in reservation.conflict_dates %}
+                                        {{ date }}<br>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
                                 <p>如有任何问题，请联系管理员。<br>
                                 If you have any questions, please contact the administrator.</p>
                                 </body></html> 

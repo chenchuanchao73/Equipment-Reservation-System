@@ -2,6 +2,7 @@ export default {
   // 通用
   common: {
     appName: '设备预定系统',
+    fullAppName: 'HTNIA设备预定系统',
     loading: '加载中...',
     success: '成功',
     downloadSuccess: '下载成功',
@@ -34,7 +35,14 @@ export default {
     month: '月',
     notProvided: '未提供',
     id: '序号',
-    view: '查看'
+    lengthLimit: '密码长度不符合要求',
+    view: '查看',
+    toggleTheme: '切换暗色/亮色主题',
+    darkMode: '暗色模式',
+    lightMode: '亮色模式',
+    useBrowserLanguage: '使用浏览器语言',
+    total: '总计',
+    items: '条'
   },
 
   // 导航
@@ -52,7 +60,7 @@ export default {
   // 首页
   home: {
     welcome: '欢迎使用设备预定系统',
-    description: '这是一个简单易用的设备预定系统，您可以在这里预定学校IT部门的各种设备。',
+    description: '这是一个简单易用的设备预定系统，您可以在这里预定学校内的各种设备和场地。',
     reserveEquipment: '预定设备',
     queryReservation: '查询预定',
     instructions: '使用说明',
@@ -72,6 +80,7 @@ export default {
     calendarViewDesc: '通过日历直观查看设备预定情况，帮助您更好地规划预定时间。',
     viewCalendar: '查看日历',
     publicQuery: '公共预定查询',
+    queryResults: '查询结果',
     noRecordsFound: '没有找到符合条件的预定记录'
   },
 
@@ -103,7 +112,10 @@ export default {
     searchPlaceholder: '搜索设备名称、型号或位置',
     currentReservations: '当前预定情况',
     noReservations: '当前没有预定记录',
-    equipmentInfo: '设备信息'
+    equipmentInfo: '设备信息',
+    simultaneousReservation: '可同时预定',
+    simultaneousReservationInfo: '同时预定说明',
+    simultaneousReservationDesc: '此设备允许最多 {max} 人同时预定使用。您可以在已有预约的时间段内继续预约此设备。'
   },
 
   // 预定
@@ -111,7 +123,9 @@ export default {
     description: '轻松创建、管理和跟踪您的设备预定。',
     queryDescription: '使用预定码或联系方式查询您的预定详情。',
     form: '预定表单',
+    recurringForm: '循环预约设备',
     detail: '预定详情',
+    recurringDetail: '循环预约详情',
     query: '查询预定',
     publicQuery: '公开查询',
     personalManagement: '个人预约管理',
@@ -165,6 +179,14 @@ export default {
     returnFailed: '归还失败',
     createSuccess: '预定创建成功',
     updateSuccess: '预定已更新',
+    updateFailed: '预定更新失败',
+    modifyReservation: '修改预定',
+    selectStartTime: '选择开始时间',
+    selectEndTime: '选择结束时间',
+    startTimeRequired: '请选择开始时间',
+    endTimeRequired: '请选择结束时间',
+    purposePlaceholder: '请输入使用目的（可选）',
+    emailPlaceholder: '请输入邮箱，用于接收预定通知',
     queryPlaceholder: '请输入预定码',
     contactPlaceholder: '请输入预定时使用的联系方式',
     codeOrContactRequired: '请输入预定码（或联系方式）',
@@ -180,10 +202,22 @@ export default {
     invalidTime: '开始时间必须早于结束时间',
     requiredField: '此字段为必填项',
     emailFormat: '请输入正确的邮箱格式',
+    emailRequired: '请输入邮箱',
     phoneFormat: '请输入正确的手机号格式',
     saveReservationCode: '请保存您的预定码',
     viewDetail: '查看预定详情',
     reservationCodeTip: '您可以使用预定码查询、修改或取消预定。',
+    viewHistory: '查看历史记录',
+    modificationHistory: '修改历史记录',
+    noHistory: '暂无修改历史记录',
+    historyFetchFailed: '获取历史记录失败',
+    oldValue: '原值',
+    newValue: '新值',
+    updated: '修改了',
+    modified: '修改了',
+    statusChanged: '变更了状态',
+    admin: '管理员',
+    user: '用户',
 
     // 预约类型
     reservationType: '预约类型',
@@ -213,20 +247,37 @@ export default {
     timeRange: '时间范围',
     createRecurringReservation: '创建循环预约',
     recurringReservationSuccess: '循环预约创建成功',
-    recurringReservationTip: '系统已为您创建了一系列预约，您可以在预约查询页面查看详情。',
-    timeConflictWarning: '注意：系统只检查了第一天的时间冲突，实际预约可能会有部分时间段冲突。',
-    recurringReservationNotice: '循环预约提示',
+    recurringReservationTip: '系统已为您创建了一系列预约。您可以在预约查询页面查看详情。',
+    timeConflictWarning: '注意：系统只检查了第一天的时间冲突，实际预约可能存在部分时间冲突。',
+    recurringReservationNotice: '循环预约通知',
     partOfRecurringReservation: '这是循环预约的一部分',
     viewRecurringReservation: '查看循环预约',
     recurringReservationDetails: '循环预约详情',
-    childReservations: '子预约列表',
-    noChildReservations: '没有子预约记录',
-    includePast: '包含已过期预约',
+    childReservations: '子预约',
+    noChildReservations: '未找到子预约',
+    includePast: '包含过去的预约',
     cancelRecurringReservation: '取消循环预约',
-    cancelRecurringReservationConfirm: '您确定要取消此循环预约吗？这将取消所有未完成的预约。',
-    cancelConfirmation: '您确定要取消此预约吗？',
-    emailForConfirmation: '用于接收确认邮件的邮箱',
-    pattern: '预约模式'
+    cancelRecurringReservationConfirm: '确定要取消此循环预约吗？这将取消所有未完成的预约。',
+    emailForConfirmation: '确认邮箱',
+    pattern: '预约模式',
+    // 冲突信息
+    conflictAlert: '部分预约因时间冲突未能创建',
+    totalPlanned: '计划创建预约总数',
+    createdCount: '成功创建数量',
+    skippedCount: '因冲突跳过数量',
+    conflictDates: '冲突日期',
+    // 时间冲突相关
+    timeConflictWith: '所选时间段与 {count} 个预定冲突',
+    timeSlotOccupied: '所选时间段已被预定',
+    timeSlotAvailable: '该时间段可用',
+    conflictWithFollowing: '与以下预定时间冲突：',
+    conflictTime: '时间：',
+    conflictUser: '使用人：',
+    conflictEmail: '邮箱：',
+    conflictPhone: '电话：',
+    conflictPurpose: '用途：',
+    conflictTo: '至',
+    maxSimultaneousReached: '该时间段已达到最大同时预定数量({count})'
   },
 
   // 管理员
@@ -307,6 +358,11 @@ export default {
     partOfRecurringReservation: '这是循环预约的一部分',
     reservationInfo: '预约信息',
     selectEquipment: '选择设备筛选',
-    allEquipment: '所有设备'
+    allEquipment: '所有设备',
+    statusLegend: '预约状态说明',
+    confirmedStatus: '绿色表示已确认的预约',
+    inUseStatus: '蓝色表示正在使用中的预约',
+    cancelTip: '点击预约，输入预约码后即可取消预约',
+    updateTip: '点击预约，输入预约码后即可修改预约'
   }
 }

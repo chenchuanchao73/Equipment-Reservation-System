@@ -44,12 +44,24 @@
           <el-card shadow="never" class="info-card">
             <div class="equipment-header">
               <h1 class="equipment-name">{{ equipment.name }}</h1>
-              <el-tag
-                :type="equipment.status === 'available' ? 'success' : 'warning'"
-                size="medium"
-              >
-                {{ equipment.status === 'available' ? $t('equipment.available') : $t('equipment.maintenance') }}
-              </el-tag>
+              <div class="equipment-tags">
+                <el-tag
+                  :type="equipment.status === 'available' ? 'success' : 'warning'"
+                  size="medium"
+                >
+                  {{ equipment.status === 'available' ? $t('equipment.available') : $t('equipment.maintenance') }}
+                </el-tag>
+                
+                <!-- 可同时预定标记 -->
+                <el-tag
+                  v-if="equipment.allow_simultaneous"
+                  type="primary"
+                  size="medium"
+                  style="margin-left: 8px;"
+                >
+                  {{ $t('equipment.simultaneousReservation') }} ({{ equipment.max_simultaneous }})
+                </el-tag>
+              </div>
             </div>
 
             <el-divider></el-divider>
@@ -69,6 +81,14 @@
 
               <el-descriptions-item :label="$t('equipment.description')" v-if="equipment.description">
                 {{ equipment.description }}
+              </el-descriptions-item>
+
+              <!-- 可同时预定说明 -->
+              <el-descriptions-item v-if="equipment.allow_simultaneous" :label="$t('equipment.simultaneousReservationInfo')">
+                <div class="simultaneous-info">
+                  <i class="el-icon-info"></i>
+                  {{ $t('equipment.simultaneousReservationDesc', { max: equipment.max_simultaneous }) }}
+                </div>
               </el-descriptions-item>
 
               <el-descriptions-item :label="$t('equipment.userGuide')" v-if="equipment.user_guide">
@@ -531,6 +551,26 @@ export default {
 .error-container {
   padding: 40px 0;
   text-align: center;
+}
+
+.reservations-status {
+  margin-top: 20px;
+}
+
+.equipment-tags {
+  display: flex;
+  align-items: center;
+}
+
+.simultaneous-info {
+  color: #409EFF;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 5px 0;
+}
+
+.simultaneous-info i {
+  margin-right: 5px;
 }
 
 @media (max-width: 768px) {

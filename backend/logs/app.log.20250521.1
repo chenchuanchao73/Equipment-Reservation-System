@@ -1,0 +1,382 @@
+2025-05-21 15:18:19,595 - root - INFO - FastAPI应用初始化中...
+2025-05-21 15:18:19,652 - backend.i18n - INFO - 国际化设置成功
+2025-05-21 15:18:20,004 - root - INFO - 应用启动 / Application started
+2025-05-21 15:18:20,007 - backend.database - INFO - 数据库初始化成功
+2025-05-21 15:18:20,008 - root - INFO - 后台任务已启动
+2025-05-21 15:18:20,008 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:18:20,009 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:18:20.009180
+2025-05-21 15:18:20,009 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=18, 秒=20
+2025-05-21 15:18:20,025 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:18:20,026 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:18:20.009180 AND Reservation.end_datetime > 2025-05-21 15:18:20.009180
+2025-05-21 15:18:20,028 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:18:20,028 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:18:20,029 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:18:20.009180
+2025-05-21 15:18:20,030 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:18:20,030 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:18:20,030 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:22:59,257 - root - INFO - FastAPI应用初始化中...
+2025-05-21 15:22:59,319 - backend.i18n - INFO - 国际化设置成功
+2025-05-21 15:22:59,660 - root - INFO - 应用启动 / Application started
+2025-05-21 15:22:59,662 - backend.database - INFO - 数据库初始化成功
+2025-05-21 15:22:59,662 - root - INFO - 后台任务已启动
+2025-05-21 15:22:59,663 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:22:59,663 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:22:59.663575
+2025-05-21 15:22:59,663 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=22, 秒=59
+2025-05-21 15:22:59,677 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:22:59,677 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:22:59.663575 AND Reservation.end_datetime > 2025-05-21 15:22:59.663575
+2025-05-21 15:22:59,679 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:22:59,680 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:22:59,680 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:22:59.663575
+2025-05-21 15:22:59,681 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:22:59,681 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:22:59,682 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:23:59,691 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:23:59,692 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:23:59.692388
+2025-05-21 15:23:59,692 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=23, 秒=59
+2025-05-21 15:23:59,693 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:23:59,694 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:23:59.692388 AND Reservation.end_datetime > 2025-05-21 15:23:59.692388
+2025-05-21 15:23:59,694 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:23:59,695 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:23:59,695 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:23:59.692388
+2025-05-21 15:23:59,696 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:23:59,696 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:23:59,696 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:24:59,704 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:24:59,704 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:24:59.704766
+2025-05-21 15:24:59,705 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=24, 秒=59
+2025-05-21 15:24:59,706 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:24:59,706 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:24:59.704766 AND Reservation.end_datetime > 2025-05-21 15:24:59.704766
+2025-05-21 15:24:59,707 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:24:59,707 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:24:59,707 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:24:59.704766
+2025-05-21 15:24:59,708 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:24:59,708 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:24:59,709 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:25:59,715 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:25:59,715 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:25:59.715738
+2025-05-21 15:25:59,716 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=25, 秒=59
+2025-05-21 15:25:59,716 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:25:59,717 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:25:59.715738 AND Reservation.end_datetime > 2025-05-21 15:25:59.715738
+2025-05-21 15:25:59,717 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:25:59,718 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:25:59,718 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:25:59.715738
+2025-05-21 15:25:59,719 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:25:59,719 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:25:59,719 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:26:59,720 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:26:59,720 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:26:59.720553
+2025-05-21 15:26:59,720 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=26, 秒=59
+2025-05-21 15:26:59,721 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:26:59,721 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:26:59.720553 AND Reservation.end_datetime > 2025-05-21 15:26:59.720553
+2025-05-21 15:26:59,722 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:26:59,722 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:26:59,722 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:26:59.720553
+2025-05-21 15:26:59,723 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:26:59,723 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:26:59,723 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:27:59,731 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:27:59,732 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:27:59.732844
+2025-05-21 15:27:59,734 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=27, 秒=59
+2025-05-21 15:27:59,736 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:27:59,737 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:27:59.732844 AND Reservation.end_datetime > 2025-05-21 15:27:59.732844
+2025-05-21 15:27:59,739 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:27:59,740 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:27:59,740 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:27:59.732844
+2025-05-21 15:27:59,742 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:27:59,742 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:27:59,742 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:28:59,754 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:28:59,756 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:28:59.756351
+2025-05-21 15:28:59,757 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=28, 秒=59
+2025-05-21 15:28:59,760 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:28:59,760 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:28:59.756351 AND Reservation.end_datetime > 2025-05-21 15:28:59.756351
+2025-05-21 15:28:59,762 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:28:59,762 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:28:59,763 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:28:59.756351
+2025-05-21 15:28:59,764 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:28:59,764 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:28:59,765 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:29:59,772 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:29:59,773 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:29:59.773110
+2025-05-21 15:29:59,773 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=29, 秒=59
+2025-05-21 15:29:59,774 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:29:59,774 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:29:59.773110 AND Reservation.end_datetime > 2025-05-21 15:29:59.773110
+2025-05-21 15:29:59,775 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:29:59,775 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:29:59,776 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:29:59.773110
+2025-05-21 15:29:59,776 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:29:59,777 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:29:59,777 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:30:59,785 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:30:59,786 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:30:59.786171
+2025-05-21 15:30:59,786 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=30, 秒=59
+2025-05-21 15:30:59,787 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:30:59,787 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:30:59.786171 AND Reservation.end_datetime > 2025-05-21 15:30:59.786171
+2025-05-21 15:30:59,788 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:30:59,788 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:30:59,789 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:30:59.786171
+2025-05-21 15:30:59,789 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:30:59,789 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:30:59,790 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:31:59,797 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:31:59,797 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:31:59.797753
+2025-05-21 15:31:59,798 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=31, 秒=59
+2025-05-21 15:31:59,799 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:31:59,799 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:31:59.797753 AND Reservation.end_datetime > 2025-05-21 15:31:59.797753
+2025-05-21 15:31:59,800 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:31:59,800 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:31:59,800 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:31:59.797753
+2025-05-21 15:31:59,801 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:31:59,801 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:31:59,801 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:32:59,804 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:32:59,805 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:32:59.805743
+2025-05-21 15:32:59,807 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=32, 秒=59
+2025-05-21 15:32:59,809 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:32:59,809 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:32:59.805743 AND Reservation.end_datetime > 2025-05-21 15:32:59.805743
+2025-05-21 15:32:59,810 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:32:59,810 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:32:59,810 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:32:59.805743
+2025-05-21 15:32:59,811 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:32:59,812 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:32:59,813 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:33:59,819 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:33:59,820 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:33:59.820124
+2025-05-21 15:33:59,820 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=33, 秒=59
+2025-05-21 15:33:59,821 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:33:59,821 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:33:59.820124 AND Reservation.end_datetime > 2025-05-21 15:33:59.820124
+2025-05-21 15:33:59,822 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:33:59,822 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:33:59,822 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:33:59.820124
+2025-05-21 15:33:59,823 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:33:59,823 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:33:59,823 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:34:59,838 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:34:59,840 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:34:59.839997
+2025-05-21 15:34:59,841 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=34, 秒=59
+2025-05-21 15:34:59,843 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:34:59,844 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:34:59.839997 AND Reservation.end_datetime > 2025-05-21 15:34:59.839997
+2025-05-21 15:34:59,846 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:34:59,847 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:34:59,847 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:34:59.839997
+2025-05-21 15:34:59,849 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:34:59,849 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:34:59,849 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:35:59,849 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:35:59,849 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:35:59.849865
+2025-05-21 15:35:59,850 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=35, 秒=59
+2025-05-21 15:35:59,851 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:35:59,851 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:35:59.849865 AND Reservation.end_datetime > 2025-05-21 15:35:59.849865
+2025-05-21 15:35:59,852 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:35:59,852 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:35:59,852 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:35:59.849865
+2025-05-21 15:35:59,853 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:35:59,853 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:35:59,853 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:36:59,861 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:36:59,862 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:36:59.862302
+2025-05-21 15:36:59,863 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=36, 秒=59
+2025-05-21 15:36:59,864 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:36:59,864 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:36:59.862302 AND Reservation.end_datetime > 2025-05-21 15:36:59.862302
+2025-05-21 15:36:59,865 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:36:59,865 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:36:59,865 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:36:59.862302
+2025-05-21 15:36:59,866 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:36:59,866 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:36:59,867 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:37:59,869 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:37:59,870 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:37:59.870153
+2025-05-21 15:37:59,870 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=37, 秒=59
+2025-05-21 15:37:59,871 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:37:59,871 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:37:59.870153 AND Reservation.end_datetime > 2025-05-21 15:37:59.870153
+2025-05-21 15:37:59,872 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:37:59,872 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:37:59,873 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:37:59.870153
+2025-05-21 15:37:59,873 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:37:59,874 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:37:59,874 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:38:59,876 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:38:59,876 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:38:59.876533
+2025-05-21 15:38:59,876 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=38, 秒=59
+2025-05-21 15:38:59,877 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:38:59,878 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:38:59.876533 AND Reservation.end_datetime > 2025-05-21 15:38:59.876533
+2025-05-21 15:38:59,878 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:38:59,879 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:38:59,879 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:38:59.876533
+2025-05-21 15:38:59,880 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:38:59,880 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:38:59,880 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:39:59,880 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:39:59,880 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:39:59.880927
+2025-05-21 15:39:59,881 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=39, 秒=59
+2025-05-21 15:39:59,882 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:39:59,882 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:39:59.880927 AND Reservation.end_datetime > 2025-05-21 15:39:59.880927
+2025-05-21 15:39:59,883 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:39:59,883 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:39:59,883 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:39:59.880927
+2025-05-21 15:39:59,884 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:39:59,884 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:39:59,884 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:40:59,896 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:40:59,897 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:40:59.897183
+2025-05-21 15:40:59,897 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=40, 秒=59
+2025-05-21 15:40:59,898 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:40:59,898 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:40:59.897183 AND Reservation.end_datetime > 2025-05-21 15:40:59.897183
+2025-05-21 15:40:59,899 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:40:59,899 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:40:59,900 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:40:59.897183
+2025-05-21 15:40:59,900 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:40:59,901 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:40:59,901 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:41:59,914 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:41:59,915 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:41:59.915395
+2025-05-21 15:41:59,915 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=41, 秒=59
+2025-05-21 15:41:59,916 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:41:59,916 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:41:59.915395 AND Reservation.end_datetime > 2025-05-21 15:41:59.915395
+2025-05-21 15:41:59,917 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:41:59,917 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:41:59,917 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:41:59.915395
+2025-05-21 15:41:59,918 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:41:59,918 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:41:59,919 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:42:59,929 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:42:59,930 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:42:59.930216
+2025-05-21 15:42:59,930 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=42, 秒=59
+2025-05-21 15:42:59,931 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:42:59,931 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:42:59.930216 AND Reservation.end_datetime > 2025-05-21 15:42:59.930216
+2025-05-21 15:42:59,932 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:42:59,932 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:42:59,933 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:42:59.930216
+2025-05-21 15:42:59,933 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:42:59,934 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:42:59,934 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:43:59,946 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:43:59,947 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:43:59.947459
+2025-05-21 15:43:59,947 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=43, 秒=59
+2025-05-21 15:43:59,948 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:43:59,949 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:43:59.947459 AND Reservation.end_datetime > 2025-05-21 15:43:59.947459
+2025-05-21 15:43:59,949 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:43:59,950 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:43:59,950 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:43:59.947459
+2025-05-21 15:43:59,951 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:43:59,951 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:43:59,951 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:44:34,907 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:44:34,908 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:44:34,908 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:44:34,920 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:44:34,922 - backend.routes.reservation - INFO - 排序参数: sort_by=None, sort_order=None
+2025-05-21 15:44:35,027 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:44:39,912 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:44:39,918 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:44:39,931 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:44:39,933 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:44:59,951 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:44:59,952 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:44:59.952575
+2025-05-21 15:44:59,953 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=44, 秒=59
+2025-05-21 15:44:59,953 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:44:59,954 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:44:59.952575 AND Reservation.end_datetime > 2025-05-21 15:44:59.952575
+2025-05-21 15:44:59,954 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:44:59,955 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:44:59,955 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:44:59.952575
+2025-05-21 15:44:59,956 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:44:59,956 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:44:59,956 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:45:55,400 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:45:55,401 - backend.routes.reservation - INFO - 获取预约详情: 预约码=UIGU9E30, 开始时间=None, 结束时间=None, 预约序号=None
+2025-05-21 15:45:55,403 - backend.routes.reservation - INFO - 尝试获取与预约码匹配的预约
+2025-05-21 15:45:55,403 - backend.routes.reservation - INFO - 没有日期参数，直接查找最近的预约
+2025-05-21 15:45:55,405 - backend.routes.reservation - INFO - 找到已确认的预约: ID=261
+2025-05-21 15:45:55,405 - backend.routes.reservation - INFO - 成功获取预约: ID=261, 状态=confirmed, 开始时间=2025-05-22 08:00:00, 结束时间=2025-05-22 10:00:00, 预约序号=RN-20250521-1007
+2025-05-21 15:45:59,967 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:45:59,967 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:45:59.967580
+2025-05-21 15:45:59,967 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=45, 秒=59
+2025-05-21 15:45:59,968 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:45:59,968 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:45:59.967580 AND Reservation.end_datetime > 2025-05-21 15:45:59.967580
+2025-05-21 15:45:59,969 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:45:59,969 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:45:59,970 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:45:59.967580
+2025-05-21 15:45:59,970 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:45:59,971 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:45:59,971 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:46:21,410 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:46:21,411 - backend.routes.reservation - INFO - 获取预约详情: 预约码=UIGU9E30, 开始时间=None, 结束时间=None, 预约序号=None
+2025-05-21 15:46:21,412 - backend.routes.reservation - INFO - 尝试获取与预约码匹配的预约
+2025-05-21 15:46:21,412 - backend.routes.reservation - INFO - 没有日期参数，直接查找最近的预约
+2025-05-21 15:46:21,413 - backend.routes.reservation - INFO - 找到已确认的预约: ID=261
+2025-05-21 15:46:21,413 - backend.routes.reservation - INFO - 成功获取预约: ID=261, 状态=confirmed, 开始时间=2025-05-22 08:00:00, 结束时间=2025-05-22 10:00:00, 预约序号=RN-20250521-1007
+2025-05-21 15:46:21,425 - backend.middlewares.log_middleware - ERROR - 获取当前管理员失败: 401: 无效的认证凭据
+2025-05-21 15:46:21,426 - backend.routes.reservation - INFO - 获取预约详情: 预约码=UIGU9E30, 开始时间=None, 结束时间=None, 预约序号=None
+2025-05-21 15:46:21,427 - backend.routes.reservation - INFO - 尝试获取与预约码匹配的预约
+2025-05-21 15:46:21,427 - backend.routes.reservation - INFO - 没有日期参数，直接查找最近的预约
+2025-05-21 15:46:21,428 - backend.routes.reservation - INFO - 找到已确认的预约: ID=261
+2025-05-21 15:46:21,428 - backend.routes.reservation - INFO - 成功获取预约: ID=261, 状态=confirmed, 开始时间=2025-05-22 08:00:00, 结束时间=2025-05-22 10:00:00, 预约序号=RN-20250521-1007
+2025-05-21 15:46:59,976 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:46:59,976 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:46:59.976646
+2025-05-21 15:46:59,976 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=46, 秒=59
+2025-05-21 15:46:59,977 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:46:59,978 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:46:59.976646 AND Reservation.end_datetime > 2025-05-21 15:46:59.976646
+2025-05-21 15:46:59,978 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:46:59,979 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:46:59,979 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:46:59.976646
+2025-05-21 15:46:59,980 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:46:59,980 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:46:59,980 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:47:59,981 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:47:59,982 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:47:59.982405
+2025-05-21 15:47:59,982 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=47, 秒=59
+2025-05-21 15:47:59,983 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:47:59,983 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:47:59.982405 AND Reservation.end_datetime > 2025-05-21 15:47:59.982405
+2025-05-21 15:47:59,984 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:47:59,984 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:47:59,985 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:47:59.982405
+2025-05-21 15:47:59,985 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:47:59,986 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:47:59,986 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 15:48:59,998 - root - INFO - 执行预约状态更新任务
+2025-05-21 15:48:59,999 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 15:48:59.999176
+2025-05-21 15:48:59,999 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=15, 分=48, 秒=59
+2025-05-21 15:49:00,000 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 15:49:00,001 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 15:48:59.999176 AND Reservation.end_datetime > 2025-05-21 15:48:59.999176
+2025-05-21 15:49:00,002 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 15:49:00,002 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 15:49:00,002 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 15:48:59.999176
+2025-05-21 15:49:00,003 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 15:49:00,004 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 15:49:00,004 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 16:09:14,823 - root - INFO - FastAPI应用初始化中...
+2025-05-21 16:09:14,889 - backend.i18n - INFO - 国际化设置成功
+2025-05-21 16:09:15,270 - root - INFO - 应用启动 / Application started
+2025-05-21 16:09:15,272 - backend.database - INFO - 数据库初始化成功
+2025-05-21 16:09:15,273 - root - INFO - 后台任务已启动
+2025-05-21 16:09:15,273 - root - INFO - 执行预约状态更新任务
+2025-05-21 16:09:15,273 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 16:09:15.273761
+2025-05-21 16:09:15,273 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=16, 分=9, 秒=15
+2025-05-21 16:09:15,287 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 16:09:15,287 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 16:09:15.273761 AND Reservation.end_datetime > 2025-05-21 16:09:15.273761
+2025-05-21 16:09:15,289 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 16:09:15,290 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 16:09:15,290 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 16:09:15.273761
+2025-05-21 16:09:15,291 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 16:09:15,292 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 16:09:15,292 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 16:09:15,293 - root - INFO - 后台任务已取消
+2025-05-21 16:09:15,293 - root - INFO - 应用关闭 / Application shut down
+2025-05-21 16:13:41,519 - root - INFO - FastAPI应用初始化中...
+2025-05-21 16:13:41,573 - backend.i18n - INFO - 国际化设置成功
+2025-05-21 16:13:41,916 - root - INFO - 应用启动 / Application started
+2025-05-21 16:13:41,918 - backend.database - INFO - 数据库初始化成功
+2025-05-21 16:13:41,918 - root - INFO - 后台任务已启动
+2025-05-21 16:13:41,919 - root - INFO - 执行预约状态更新任务
+2025-05-21 16:13:41,919 - backend.utils.status_updater - INFO - 当前时间: 2025-05-21 16:13:41.919443
+2025-05-21 16:13:41,919 - backend.utils.status_updater - INFO - 当前时间详细信息: 年=2025, 月=5, 日=21, 时=16, 分=13, 秒=41
+2025-05-21 16:13:41,932 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'使用中'的预约
+2025-05-21 16:13:41,932 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status == 'confirmed' AND Reservation.start_datetime <= 2025-05-21 16:13:41.919443 AND Reservation.end_datetime > 2025-05-21 16:13:41.919443
+2025-05-21 16:13:41,934 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'使用中'的预约
+2025-05-21 16:13:41,935 - backend.utils.status_updater - INFO - 执行查询：查找应该更新为'已过期'的预约
+2025-05-21 16:13:41,935 - backend.utils.status_updater - INFO - SQL查询条件: Reservation.status.in_(['confirmed', 'in_use']) AND Reservation.end_datetime <= 2025-05-21 16:13:41.919443
+2025-05-21 16:13:41,936 - backend.utils.status_updater - INFO - 找到 0 个应该更新为'已过期'的预约
+2025-05-21 16:13:41,936 - backend.utils.status_updater - INFO - ORM更新结果: 使用中=0条, 已过期=0条
+2025-05-21 16:13:41,937 - backend.utils.status_updater - INFO - 没有预约需要更新状态
+2025-05-21 16:13:41,938 - root - INFO - 后台任务已取消
+2025-05-21 16:13:41,938 - root - INFO - 应用关闭 / Application shut down

@@ -127,6 +127,21 @@
       </el-table-column>
 
       <el-table-column
+        label="可同时预定"
+        width="110"
+        align="center"
+      >
+        <template slot-scope="scope">
+          <el-tag
+            :type="scope.row.allow_simultaneous ? 'success' : 'info'"
+            size="small"
+          >
+            {{ scope.row.allow_simultaneous ? `支持(${scope.row.max_simultaneous}人)` : '不支持' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+
+      <el-table-column
         label="设备图片"
         width="100"
         align="center"
@@ -183,7 +198,7 @@
     <div class="pagination-container">
       <el-pagination
         background
-        layout="total, prev, pager, next"
+        :layout="paginationLayout"
         :total="total"
         :page-size="pageSize"
         :current-page.sync="currentPage"
@@ -240,6 +255,26 @@
           </el-radio-group>
         </el-form-item>
 
+        <el-form-item label="可同时预定" prop="allow_simultaneous">
+          <el-switch
+            v-model="form.allow_simultaneous"
+            active-text="启用"
+            inactive-text="禁用"
+          ></el-switch>
+
+          <div v-if="form.allow_simultaneous" style="margin-top: 10px;">
+            <el-form-item label="最大预定人数" prop="max_simultaneous">
+              <el-input-number
+                v-model="form.max_simultaneous"
+                :min="1"
+                :max="20"
+                size="small"
+              ></el-input-number>
+              <div class="form-tip">设置可同时预定的最大人数</div>
+            </el-form-item>
+          </div>
+        </el-form-item>
+
         <el-form-item label="设备描述" prop="description">
           <el-input
             type="textarea"
@@ -276,21 +311,10 @@
         </el-form-item>
 
         <el-form-item label="设备图片">
-          <el-upload
-            class="equipment-image-uploader"
-            :action="uploadUrl"
-            :headers="uploadHeaders"
-            :show-file-list="false"
-            :on-success="handleUploadSuccess"
-            :on-error="handleUploadError"
-            :before-upload="beforeUpload"
-            :multiple="false"
-            name="file"
-            :with-credentials="true"
-          >
+          <div class="equipment-image-uploader">
             <img v-if="form.image_path" :src="getFullImageUrl(form.image_path)" class="equipment-image">
             <img v-else :src="require('@/assets/upload.png')" class="equipment-image default-equipment-image">
-          </el-upload>
+          </div>
           <div class="image-tip">建议尺寸：800x600像素，最大8MB</div>
           <div class="manual-upload">
             <el-button size="small" type="primary" @click="triggerManualUpload">手动上传</el-button>
@@ -317,22 +341,10 @@
       :visible.sync="uploadDialogVisible"
       width="30%"
     >
-      <el-upload
-        class="equipment-image-uploader"
-        :action="uploadUrl"
-        :headers="uploadHeaders"
-        :data="{ equipment_id: currentEquipment.id }"
-        :show-file-list="false"
-        :on-success="handleImageUploadSuccess"
-        :on-error="handleUploadError"
-        :before-upload="beforeUpload"
-        :multiple="false"
-        name="file"
-        :with-credentials="true"
-      >
+      <div class="equipment-image-uploader">
         <img v-if="imageUrl" :src="getFullImageUrl(imageUrl)" class="equipment-image">
         <img v-else :src="require('@/assets/upload.png')" class="equipment-image default-equipment-image">
-      </el-upload>
+      </div>
       <div class="image-tip">建议尺寸：800x600像素，最大8MB</div>
       <div class="manual-upload">
         <el-button size="small" type="primary" @click="triggerDialogManualUpload">手动上传</el-button>
@@ -379,6 +391,8 @@ export default {
         status: '',
         search: ''
       },
+      // 响应式布局相关
+      isMobile: window.innerWidth <= 768,
 
       dialogVisible: false,
       dialogType: 'add', // 'add' or 'edit'
@@ -391,7 +405,10 @@ export default {
         status: 'available',
         description: '',
         user_guide: '',
-        image_path: ''
+        video_tutorial: '',
+        image_path: '',
+        allow_simultaneous: false,
+        max_simultaneous: 1
       },
       rules: {
         name: [
@@ -456,12 +473,26 @@ export default {
     // 获取完整的图片URL
     baseUrl() {
       return axios.defaults.baseURL || 'http://localhost:8000';
+    },
+
+    // 根据屏幕宽度动态调整分页组件布局
+    paginationLayout() {
+      return this.isMobile
+        ? 'prev, next'
+        : 'total, prev, pager, next';
     }
   },
 
   created() {
     this.fetchData()
     this.fetchCategories()
+    // 添加窗口大小变化的监听器
+    window.addEventListener('resize', this.handleResize)
+  },
+
+  beforeDestroy() {
+    // 移除窗口大小变化的监听器
+    window.removeEventListener('resize', this.handleResize)
   },
 
   methods: {
@@ -511,6 +542,11 @@ export default {
       this.fetchData()
     },
 
+    // 处理窗口大小变化
+    handleResize() {
+      this.isMobile = window.innerWidth <= 768
+    },
+
     // 添加设备
     handleAdd() {
       this.dialogType = 'add'
@@ -524,7 +560,9 @@ export default {
         description: '',
         user_guide: '',
         video_tutorial: '',
-        image_path: ''
+        image_path: '',
+        allow_simultaneous: false,
+        max_simultaneous: 1
       }
       this.dialogVisible = true
     },
@@ -672,8 +710,6 @@ export default {
 
       this.$message.error(errorMessage)
     },
-
-
 
     // 处理视频类型变化
     handleVideoTypeChange() {

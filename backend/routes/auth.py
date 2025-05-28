@@ -91,6 +91,18 @@ async def get_current_admin(
     
     return admin
 
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    """
+    获取当前用户，这是一个简化版本，用于普通用户访问
+    本系统没有专门的用户登录，此函数主要用于API权限控制
+    """
+    # 由于系统未实现普通用户登录，简单返回None表示匿名用户
+    # 这允许API端点在不需要严格认证的情况下使用
+    return None
+
 async def optional_admin(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)

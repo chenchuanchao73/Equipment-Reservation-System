@@ -241,7 +241,12 @@
         <div class="success-content">
           <i class="el-icon-success success-icon"></i>
 
-          <p class="success-message">{{ $t('reservation.recurringReservationSuccess') }}</p>
+          <p class="success-message">{{ $t('reservation.saveReservationCode') }}</p>
+
+          <!-- 预定码单独显示在最上方 -->
+          <div class="reservation-code-container">
+            <span class="reservation-code">{{ reservationCode || '无预约码' }}</span>
+          </div>
 
           <div class="reservation-summary">
             <p><strong>{{ $t('reservation.patternType') }}:</strong> {{ getPatternTypeText() }}</p>
@@ -261,10 +266,40 @@
             </p>
           </div>
 
+          <!-- 冲突信息显示区域 -->
+          <div v-if="hasConflicts" class="conflict-info">
+            <el-alert
+              :title="$t('reservation.conflictAlert')"
+              type="warning"
+              :closable="false"
+              show-icon
+            >
+              <div class="conflict-details">
+                <p>{{ $t('reservation.totalPlanned') }}: {{ totalPlanned }}</p>
+                <p>{{ $t('reservation.createdCount') }}: {{ createdCount }}</p>
+                <p>{{ $t('reservation.skippedCount') }}: {{ skippedCount }}</p>
+              </div>
+              
+              <div v-if="conflictDates && conflictDates.length > 0" class="conflict-dates">
+                <p><strong>{{ $t('reservation.conflictDates') }}:</strong></p>
+                <el-tag
+                  v-for="(date, index) in conflictDates"
+                  :key="index"
+                  type="danger"
+                  size="small"
+                  effect="plain"
+                  class="conflict-date-tag"
+                >
+                  {{ date }}
+                </el-tag>
+              </div>
+            </el-alert>
+          </div>
+
           <p class="reservation-tip">{{ $t('reservation.recurringReservationTip') }}</p>
 
           <div class="dialog-footer">
-            <el-button @click="viewEquipment">{{ $t('equipment.viewDetail') }}</el-button>
+            <el-button @click="viewRecurringReservation">{{ $t('reservation.viewDetail') }}</el-button>
             <el-button type="primary" @click="closeSuccessDialog">{{ $t('common.confirm') }}</el-button>
           </div>
         </div>
@@ -349,6 +384,12 @@ export default {
       timeConflict: false,
       successDialogVisible: false,
       recurringReservationId: null,
+      reservationCode: '',
+      hasConflicts: false,
+      conflictDates: [],
+      totalPlanned: 0,
+      createdCount: 0,
+      skippedCount: 0,
 
       form: {
         patternType: 'weekly',
@@ -369,9 +410,11 @@ export default {
           { required: true, message: this.$t('reservation.requiredField'), trigger: 'change' }
         ],
         daysOfWeek: [
+          { required: true, message: this.$t('reservation.requiredField'), trigger: 'change' },
           { validator: validateDaysOfWeek, trigger: 'change' }
         ],
         daysOfMonth: [
+          { required: true, message: this.$t('reservation.requiredField'), trigger: 'change' },
           { validator: validateDaysOfMonth, trigger: 'change' }
         ],
         dateRange: [
@@ -518,6 +561,23 @@ export default {
             // 保存循环预约ID
             this.recurringReservationId = response.data.data.id
             
+            // 保存预约码
+            this.reservationCode = response.data.data.reservation_code || ''
+            
+            // 处理冲突信息
+            if (response.data.data.conflict_dates && response.data.data.conflict_dates.length > 0) {
+              this.hasConflicts = true
+              this.conflictDates = response.data.data.conflict_dates
+              this.totalPlanned = response.data.data.total_planned || 0
+              this.createdCount = response.data.data.created_count || 0
+              this.skippedCount = this.totalPlanned - this.createdCount
+            } else {
+              this.hasConflicts = false
+            }
+            
+            console.log("获取的循环预约信息:", response.data.data)
+            console.log("设置的预约码:", this.reservationCode)
+            
             // 显示成功对话框
             this.successDialogVisible = true
           } else {
@@ -539,6 +599,20 @@ export default {
 
     viewEquipment() {
       this.$router.push(`/equipment/${this.equipment.id}`)
+    },
+    
+    // 查看循环预约详情
+    viewRecurringReservation() {
+      if (this.recurringReservationId) {
+        console.log("跳转到循环预约详情页，ID:", this.recurringReservationId);
+        this.$router.push(`/recurring-reservation/${this.recurringReservationId}`);
+      } else {
+        console.error("错误: 循环预约ID为空，无法查看详情");
+        this.$message.error(this.$t('reservation.reservationNotFound'));
+        
+        // 关闭成功对话框
+        this.closeSuccessDialog();
+      }
     },
 
     // 返回单次预约表单
@@ -734,6 +808,22 @@ export default {
   margin-bottom: 20px;
 }
 
+.reservation-code-container {
+  text-align: center;
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  border: 1px dashed #dcdfe6;
+}
+
+.reservation-code {
+  font-size: 24px;
+  font-weight: bold;
+  color: #409EFF;
+  letter-spacing: 2px;
+}
+
 .reservation-summary {
   text-align: left;
   background-color: #f5f7fa;
@@ -753,6 +843,22 @@ export default {
 
 .dialog-footer {
   margin-top: 20px;
+}
+
+.conflict-info {
+  margin-bottom: 20px;
+}
+
+.conflict-details {
+  margin-bottom: 10px;
+}
+
+.conflict-dates {
+  margin-top: 10px;
+}
+
+.conflict-date-tag {
+  margin-right: 5px;
 }
 
 @media (max-width: 768px) {

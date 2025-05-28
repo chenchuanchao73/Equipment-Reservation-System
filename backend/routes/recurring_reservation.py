@@ -56,6 +56,20 @@ async def create_recurring_reservation_api(
         if not db_recurring_reservation:
             return RecurringReservationResponse(success=False, message=message, data=None)
 
+        # 构建包含冲突信息的响应消息
+        conflict_dates = []
+        if hasattr(db_recurring_reservation, 'conflicts') and db_recurring_reservation.conflicts:
+            conflict_dates = db_recurring_reservation.conflicts.split(',')
+            
+        skipped_count = (db_recurring_reservation.total_planned or 0) - (db_recurring_reservation.created_count or 0)
+        
+        success_message = f"循环预约创建成功，已生成{len(child_reservations)}个预约"
+        if skipped_count > 0:
+            success_message += f"，{skipped_count}个预约因时间冲突已跳过"
+            
+        # 转换冲突日期为数组并添加到数据中
+        db_recurring_reservation.conflict_dates = conflict_dates
+
         # 发送确认邮件（如果提供了邮箱）
         if db_recurring_reservation.user_email and child_reservations:
             try:
@@ -79,32 +93,46 @@ async def create_recurring_reservation_api(
                     recurrence_rule = "每月" + "、".join([str(d) + "号" for d in days])
                 else:
                     recurrence_rule = pattern_type
+                    
+                # 构建邮件数据
+                email_data = {
+                    "reservation_code": db_recurring_reservation.reservation_code,
+                    "user_name": db_recurring_reservation.user_name,
+                    "equipment_name": equipment.name,
+                    "equipment_category": equipment.category if hasattr(equipment, 'category') else '',
+                    "location": equipment.location if hasattr(equipment, 'location') else '',
+                    "description": equipment.description if hasattr(equipment, 'description') else '',
+                    "start_date": db_recurring_reservation.start_date.strftime('%Y-%m-%d'),
+                    "end_date": db_recurring_reservation.end_date.strftime('%Y-%m-%d'),
+                    "recurrence_rule": recurrence_rule,
+                    "start_time": db_recurring_reservation.start_time.strftime('%H:%M'),
+                    "end_time": db_recurring_reservation.end_time.strftime('%H:%M'),
+                    "status": "已确认 / Confirmed"
+                }
+                
+                # 添加冲突信息到邮件数据
+                if conflict_dates:
+                    email_data["has_conflicts"] = True
+                    email_data["conflict_dates"] = conflict_dates
+                    email_data["skipped_count"] = skipped_count
+                    email_data["total_planned"] = db_recurring_reservation.total_planned
+                    email_data["created_count"] = db_recurring_reservation.created_count
+                else:
+                    email_data["has_conflicts"] = False
+                
                 await send_reservation_confirmation(
                     to_email=db_recurring_reservation.user_email,
-                    reservation_data={
-                        "reservation_code": db_recurring_reservation.reservation_code,
-                        "user_name": db_recurring_reservation.user_name,
-                        "equipment_name": equipment.name,
-                        "equipment_category": equipment.category if hasattr(equipment, 'category') else '',
-                        "location": equipment.location if hasattr(equipment, 'location') else '',
-                        "description": equipment.description if hasattr(equipment, 'description') else '',
-                        "start_date": db_recurring_reservation.start_date.strftime('%Y-%m-%d'),
-                        "end_date": db_recurring_reservation.end_date.strftime('%Y-%m-%d'),
-                        "recurrence_rule": recurrence_rule,
-                        "start_time": db_recurring_reservation.start_time.strftime('%H:%M'),
-                        "end_time": db_recurring_reservation.end_time.strftime('%H:%M'),
-                        "status": "已确认 / Confirmed"
-                    },
+                    reservation_data=email_data,
                     lang=recurring_reservation.lang or "zh_CN",
                     db=db,
                     is_recurring=True
                 )
             except Exception as e:
                 logger.error(f"发送预约确认邮件失败: {str(e)}")
-
+        
         return RecurringReservationResponse(
             success=True,
-            message=f"循环预约创建成功，已生成{len(child_reservations)}个预约",
+            message=success_message,
             data=db_recurring_reservation
         )
     except Exception as e:

@@ -32,6 +32,11 @@ class RecurringReservation(Base):
     purpose = Column(Text, comment="使用目的")
     status = Column(String(20), default="active", comment="状态: active, cancelled")
     created_at = Column(DateTime, default=BeijingNow(), comment="创建时间")
+    
+    # 冲突信息相关字段
+    conflicts = Column(Text, nullable=True, comment="冲突日期列表，逗号分隔的YYYY-MM-DD格式")
+    total_planned = Column(Integer, nullable=True, comment="计划创建的子预约总数")
+    created_count = Column(Integer, nullable=True, comment="成功创建的子预约数量")
 
     # 关系
     equipment = relationship("Equipment", back_populates="recurring_reservations")

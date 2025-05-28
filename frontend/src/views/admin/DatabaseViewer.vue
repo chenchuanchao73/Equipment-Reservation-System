@@ -49,7 +49,7 @@
             <el-pagination
               v-if="total > 0"
               background
-              layout="total, sizes, prev, pager, next, jumper"
+              :layout="paginationLayout"
               :current-page.sync="page"
               :page-size="pageSize"
               :page-sizes="[10, 20, 50, 100]"
@@ -85,7 +85,7 @@
       </el-col>
     </el-row>
   </div>
-  <div v-else style="text-align:center; color:#888; padding: 60px 0;">无权限，仅超级管理员可访问</div>
+  <div v-else style="text-align:center; color:#888; padding: 60px 0;">正在加载数据库表...</div>
 </template>
 
 <script>
@@ -106,6 +106,8 @@ export default {
       pageSize: 20,
       loading: false,
       inited: false,
+      // 响应式布局相关
+      isMobile: window.innerWidth <= 768,
       // 表字段注释对照表
       fieldComments: {
         // admin表：系统管理员
@@ -149,6 +151,8 @@ export default {
         'email_settings.enabled': '配置是否启用（1启用，0禁用）',
         'email_settings.created_at': '配置创建时间',
         'email_settings.updated_at': '配置更新时间',
+        'email_settings.cc_list': '抄送人列表，多个邮箱用逗号分隔',
+        'email_settings.bcc_list':'密送人列表，多个邮箱用逗号分隔',
 
         // email_templates表：邮件模板
         'email_templates.id': '模板唯一ID',
@@ -176,11 +180,21 @@ export default {
         'equipment.updated_at': '设备信息更新时间',
         'equipment.video_tutorial': '设备视频教程地址',
         'equipment.category_id': '设备类别ID',
+        'equipment.allow_simultaneous': '是否允许同时多人预约（1允许，0不允许）',
+        'equipment.max_simultaneous': '最大同时预约人数',
+
 
         // equipment_category表：设备类别
         'equipment_category.id': '类别唯一ID',
         'equipment_category.name': '类别名称',
         'equipment_category.description': '类别描述',
+
+        // equipment_time_slots表：设备时间段
+        'equipment_time_slots.id': '时间段唯一ID',
+        'equipment_time_slots.equipment_id': '关联的设备ID',
+        'equipment_time_slots.start_datetime': '时间段开始时间',
+        'equipment_time_slots.end_datetime': '时间段结束时间',
+        'equipment_time_slots.current_count': '当前时间段内的预约数量',
 
         // recurring_reservation表：周期性预约
         'recurring_reservation.id': '周期预约唯一ID',
@@ -200,6 +214,12 @@ export default {
         'recurring_reservation.status': '周期预约状态',
         'recurring_reservation.created_at': '创建时间',
         'recurring_reservation.reservation_code': '周期预约编码',
+        'recurring_reservation.conflicts': '冲突日期列表，逗号分隔的YYYY-MM-DD格式',
+        'recurring_reservation.total_planned': '计划创建的子预约总数',
+        'recurring_reservation.created_count': '成功创建的子预约数量',
+
+
+
 
         // reservation表：单次预约
         'reservation.id': '预约唯一ID',
@@ -217,6 +237,7 @@ export default {
         'reservation.recurring_reservation_id': '关联的周期预约ID',
         'reservation.is_exception': '是否为周期预约的特例',
         'reservation.reservation_number': '预约编号',
+        'reservation.time_slot_id': '关联的设备时间段ID(整数)',
 
         // system_settings表：系统设置
         'system_settings.id': '设置唯一ID',
@@ -235,16 +256,31 @@ export default {
       user: state => state.user,
     }),
     isSuperAdmin() {
-      return this.user && this.user.role === 'superadmin'
+      // 允许所有管理员访问数据库表查看功能
+      return this.user && (this.user.role === 'superadmin' || this.user.role === 'admin')
     },
     // 判断是否为小表格（列少的表格）
     isSmallTable() {
-      const smallTables = ['admin', 'equipment_category', 'system_settings'];
+      const smallTables = ['admin', 'equipment_category', 'system_settings', 'announcements','equipment_time_slots','reservation_history'];
       return !smallTables.includes(this.selectedTable);
+    },
+
+    // 根据屏幕宽度动态调整分页组件布局
+    paginationLayout() {
+      return this.isMobile
+        ? 'prev, next'
+        : 'total, sizes, prev, pager, next, jumper';
     }
   },
   created() {
     console.log("DatabaseViewer 组件 created")
+    // 添加窗口大小变化的监听器
+    window.addEventListener('resize', this.handleResize)
+  },
+
+  beforeDestroy() {
+    // 移除窗口大小变化的监听器
+    window.removeEventListener('resize', this.handleResize)
   },
   mounted() {
     console.log("DatabaseViewer 组件 mounted, 调用 initIfNeeded")
@@ -337,6 +373,11 @@ export default {
       this.fetchTableColumns()
       this.fetchTableRows()
     },
+
+    // 处理窗口大小变化
+    handleResize() {
+      this.isMobile = window.innerWidth <= 768
+    },
     // 获取字段注释 - 简化版本
     getFieldComment(fieldName) {
       const key = `${this.selectedTable}.${fieldName}`;
@@ -374,6 +415,16 @@ export default {
         return 200;
       }
 
+      // 添加针对announcements表的最小列宽设置
+      if (this.selectedTable === 'announcements') {
+        if (lowerColumnName === 'id') return 80;
+        if (lowerColumnName === 'title') return 250;
+        if (lowerColumnName === 'content') return 450;
+        if (lowerColumnName === 'created_at') return 180;
+        if (lowerColumnName === 'is_active') return 120;
+        return 150;
+      }
+
       // 默认最小列宽
       if (lowerColumnName.includes('content_html') || lowerColumnName.includes('html')) {
         return 300;
@@ -393,6 +444,16 @@ export default {
       // 特殊表格特殊处理
       if (this.selectedTable === 'email_logs' && lowerColumnName === 'content_html') {
         return 500;
+      }
+
+      // 专门为announcements表添加列宽处理
+      if (this.selectedTable === 'announcements') {
+        if (lowerColumnName === 'id') return 80;
+        if (lowerColumnName === 'title') return 200;
+        if (lowerColumnName === 'content') return 350;
+        if (lowerColumnName === 'created_at') return 180;
+        if (lowerColumnName === 'is_active') return 120;
+        return 150; // 其他可能的列
       }
 
       // 根据列名类型分配宽度
@@ -434,12 +495,58 @@ export default {
         }
       }
 
-      // 对日期时间格式化
-      if ((column.property.toLowerCase().includes('date') || column.property.toLowerCase().includes('time')) &&
+      const tableName = this.selectedTable;
+      const columnName = column.property;
+
+      // 特殊处理recurring_reservation表的start_date和end_date，只显示日期部分
+      if (tableName === 'recurring_reservation' &&
+          (columnName === 'start_date' || columnName === 'end_date')) {
+        if (typeof cellValue === 'string' && cellValue.length >= 10) {
+          return cellValue.substring(0, 10); // 只保留YYYY-MM-DD部分
+        }
+      }
+
+      // 特殊处理recurring_reservation表的start_time和end_time，移除微秒
+      if (tableName === 'recurring_reservation' &&
+          (columnName === 'start_time' || columnName === 'end_time')) {
+        if (typeof cellValue === 'string') {
+          // 如果包含空格（例如"09:00:00 000000"）
+          if (cellValue.includes(' ')) {
+            return cellValue.split(' ')[0]; // 只保留时间部分
+          }
+          // 如果只有时间部分
+          return cellValue;
+        }
+      }
+
+      // 对日期时间格式化，不进行时区转换
+      // 排除明确是ID字段的列，比如time_slot_id
+      if (column.property !== 'time_slot_id' && column.property !== 'timeslot_number' &&
+          (column.property.toLowerCase().includes('date') || column.property.toLowerCase().includes('time')) &&
           !isNaN(Date.parse(cellValue))) {
         try {
-          // 使用日期工具函数，自动转换为北京时间
-          return formatDate(cellValue, 'YYYY-MM-DD HH:mm:ss', true);
+          // 以下字段已经是北京时间，不需要再转换
+          const skipTimeZoneConversion = [
+            'updated_at', 'created_at', 'start_datetime', 'end_datetime'
+          ];
+
+          // 不进行时区转换，直接显示数据库中的原始时间
+          const toBeijingTime = false;
+
+          // 根据字段类型选择显示格式
+          let format = 'YYYY-MM-DD HH:mm:ss';
+
+          // 只显示日期部分
+          if (columnName === 'start_date' || columnName === 'end_date') {
+            format = 'YYYY-MM-DD';
+          }
+
+          // 只显示时间部分
+          if (columnName === 'start_time' || columnName === 'end_time') {
+            format = 'HH:mm:ss';
+          }
+
+          return formatDate(cellValue, format, toBeijingTime);
         } catch (e) {
           console.error('日期格式化错误:', e);
           return cellValue;

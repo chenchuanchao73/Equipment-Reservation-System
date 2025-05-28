@@ -9,9 +9,21 @@
         <el-col :span="16">
           <div class="calendar-controls">
             <el-button-group>
-              <el-button size="small" @click="changeView('dayGridMonth')">{{ $t('calendar.month') }}</el-button>
-              <el-button size="small" @click="changeView('timeGridWeek')">{{ $t('calendar.week') }}</el-button>
-              <el-button size="small" @click="changeView('timeGridDay')">{{ $t('calendar.day') }}</el-button>
+              <el-button
+                size="small"
+                @click="changeView('dayGridMonth')"
+                :type="calendarOptions.initialView === 'dayGridMonth' ? 'primary' : ''"
+              >{{ $t('calendar.month') }}</el-button>
+              <el-button
+                size="small"
+                @click="changeView('timeGridWeek')"
+                :type="calendarOptions.initialView === 'timeGridWeek' ? 'primary' : ''"
+              >{{ $t('calendar.week') }}</el-button>
+              <el-button
+                size="small"
+                @click="changeView('timeGridDay')"
+                :type="calendarOptions.initialView === 'timeGridDay' ? 'primary' : ''"
+              >{{ $t('calendar.day') }}</el-button>
             </el-button-group>
             <el-button size="small" @click="today">{{ $t('calendar.today') }}</el-button>
             <el-button-group>
@@ -43,6 +55,44 @@
           </div>
         </el-col>
       </el-row>
+
+      <!-- 预约状态提示 -->
+      <el-row :gutter="20" class="status-legend-row">
+        <el-col :span="24">
+          <div class="status-legend">
+            <el-alert
+              type="primary"
+              :closable="false"
+
+            >
+              <div class="status-legend-content">
+                <div class="status-colors">
+                  <span class="status-item">
+                    <span class="status-color confirmed-color"></span>
+                    {{ $t('calendar.confirmedStatus') }}
+                  </span>
+                  <span class="status-item">
+                    <span class="status-color inuse-color"></span>
+                    {{ $t('calendar.inUseStatus') }}
+                  </span>
+                </div>
+                <div class="cancel-tip-container">
+                  <span class="status-item cancel-tip">
+                    <i class="el-icon-info"></i>
+                    {{ $t('calendar.cancelTip') }}
+                  </span>
+                </div>
+                <div class="update-tip-container">
+                  <span class="status-item update-tip">
+                    <i class="el-icon-info"></i>
+                    {{ $t('calendar.updateTip') }}
+                  </span>
+                </div>
+              </div>
+            </el-alert>
+          </div>
+        </el-col>
+      </el-row>
     </div>
 
     <FullCalendar
@@ -51,7 +101,14 @@
     />
 
     <!-- 预约详情弹窗 -->
-    <el-dialog :visible.sync="detailVisible" width="400px" :title="$t('calendar.reservationInfo')">
+    <el-dialog
+      :visible.sync="detailVisible"
+      width="400px"
+      :title="$t('calendar.reservationInfo')"
+      :modal-append-to-body="false"
+      :close-on-click-modal="true"
+      class="calendar-detail-dialog"
+    >
       <div v-if="selectedEvent" class="event-detail-card">
         <div class="event-header" :class="'status-' + selectedEvent.extendedProps.status">
           <h3>{{ selectedEvent.title }}</h3>
@@ -88,6 +145,16 @@
 
         <!-- 取消预约/提前归还按钮 -->
         <div class="action-buttons">
+          <!-- 添加修改按钮，只在预约状态为 confirmed 且未开始时显示 -->
+          <el-button
+            v-if="selectedEvent.extendedProps.status === 'confirmed' && !isReservationStarted(selectedEvent)"
+            type="primary"
+            @click="showModifyDialog"
+            style="margin-right: 10px;"
+          >
+            {{ $t('reservation.modifyReservation') }}
+          </el-button>
+
           <el-button
             type="danger"
             @click="showCancelDialog"
@@ -103,6 +170,9 @@
       :title="selectedEvent && selectedEvent.extendedProps.status === 'in_use' ? $t('reservation.earlyReturn') : $t('reservation.cancelReservation')"
       :visible.sync="cancelDialogVisible"
       width="400px"
+      :modal-append-to-body="false"
+      :close-on-click-modal="true"
+      class="calendar-cancel-dialog"
     >
       <div class="cancel-content">
         <p>{{ selectedEvent && selectedEvent.extendedProps.status === 'in_use' ? $t('reservation.confirmEarlyReturn') : $t('reservation.confirmCancel') }}</p>
@@ -121,6 +191,139 @@
         <el-button @click="cancelDialogVisible = false">{{ $t('common.cancel') }}</el-button>
         <el-button type="danger" :loading="cancelling" @click="cancelReservation">{{ $t('common.confirm') }}</el-button>
       </span>
+    </el-dialog>
+
+    <!-- 修改预约对话框 -->
+    <el-dialog
+      :title="$t('reservation.modifyReservation')"
+      :visible.sync="modifyDialogVisible"
+      width="400px"
+      :modal-append-to-body="false"
+      :close-on-click-modal="true"
+      class="calendar-modify-dialog"
+    >
+      <div class="cancel-content">
+        <p>{{ $t('reservation.modifyReservation') }}</p>
+
+        <el-form ref="modifyForm" :model="modifyForm" :rules="modifyRules" label-position="top">
+          <el-form-item :label="$t('reservation.code')" prop="reservationCode">
+            <el-input
+              v-model="modifyForm.reservationCode"
+              :placeholder="$t('reservation.queryPlaceholder')"
+            ></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="modifyDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="modifying" @click="confirmModifyDialog">{{ $t('common.confirm') }}</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 修改预约表单对话框 -->
+    <el-dialog
+      :title="$t('reservation.modifyReservation')"
+      :visible.sync="modifyFormDialogVisible"
+      width="600px"
+      :modal-append-to-body="false"
+      :close-on-click-modal="true"
+      class="calendar-modify-form-dialog"
+    >
+      <el-form
+        ref="modifyFormRef"
+        :model="modifyFormData"
+        :rules="modifyFormRules"
+        label-width="120px"
+        v-loading="modifyFormSubmitting"
+      >
+        <!-- 开始时间 -->
+        <el-form-item :label="$t('reservation.startTime')" prop="startDateTime">
+          <el-date-picker
+            v-model="modifyFormData.startDateTime"
+            type="datetime"
+            :placeholder="$t('reservation.selectStartTime')"
+            style="width: 100%"
+            :picker-options="dateTimePickerOptions"
+            value-format="yyyy-MM-ddTHH:mm:ss"
+            format="yyyy-MM-dd HH:mm:ss"
+            @change="checkModifyTimeAvailability"
+          ></el-date-picker>
+        </el-form-item>
+
+        <!-- 结束时间 -->
+        <el-form-item :label="$t('reservation.endTime')" prop="endDateTime">
+          <el-date-picker
+            v-model="modifyFormData.endDateTime"
+            type="datetime"
+            :placeholder="$t('reservation.selectEndTime')"
+            style="width: 100%"
+            :picker-options="dateTimePickerOptions"
+            value-format="yyyy-MM-ddTHH:mm:ss"
+            format="yyyy-MM-dd HH:mm:ss"
+            @change="checkModifyTimeAvailability"
+          ></el-date-picker>
+        </el-form-item>
+
+        <!-- 时间冲突提示 -->
+        <el-alert
+          v-if="modifyTimeConflict"
+          :title="modifyTimeConflictTitle"
+          type="error"
+          :closable="false"
+          show-icon
+          style="margin-bottom: 15px;"
+        >
+          <div v-if="modifyConflictingReservations && modifyConflictingReservations.length > 0">
+            <p style="margin-bottom: 10px;">{{ $t('reservation.conflictWithFollowing') }}</p>
+            <div v-for="conflict in modifyConflictingReservations" :key="conflict.id" style="margin-bottom: 8px; padding: 8px; background-color: #fef0f0; border-radius: 4px;">
+              <div><strong>{{ $t('reservation.conflictTime') }}</strong>{{ conflict.start_datetime }} {{ $t('reservation.conflictTo') }} {{ conflict.end_datetime }}</div>
+              <div><strong>{{ $t('reservation.conflictUser') }}</strong>{{ conflict.user_name }} ({{ conflict.user_department }})</div>
+              <div v-if="conflict.user_email"><strong>{{ $t('reservation.conflictEmail') }}</strong>{{ conflict.user_email }}</div>
+              <div v-if="conflict.user_phone"><strong>{{ $t('reservation.conflictPhone') }}</strong>{{ conflict.user_phone }}</div>
+              <div v-if="conflict.purpose"><strong>{{ $t('reservation.conflictPurpose') }}</strong>{{ conflict.purpose }}</div>
+            </div>
+          </div>
+          <template v-else-if="modifyConflictMessage">
+            {{ modifyConflictMessage }}
+          </template>
+        </el-alert>
+
+        <!-- 时间可用提示 -->
+        <el-alert
+          v-if="!modifyTimeConflict && modifyTimeAvailabilityChecked"
+          :title="$t('reservation.timeSlotAvailable')"
+          type="success"
+          :closable="false"
+          show-icon
+          style="margin-bottom: 15px;"
+        ></el-alert>
+
+        <!-- 使用目的 -->
+        <el-form-item :label="$t('reservation.purpose')" prop="purpose">
+          <el-input
+            v-model="modifyFormData.purpose"
+            :placeholder="$t('reservation.purposePlaceholder')"
+            type="textarea"
+            :rows="3"
+          ></el-input>
+        </el-form-item>
+
+        <!-- 用户邮箱 -->
+        <el-form-item :label="$t('reservation.userEmail')" prop="userEmail">
+          <el-input
+            v-model="modifyFormData.userEmail"
+            :placeholder="$t('reservation.emailPlaceholder')"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="modifyFormDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitModifyForm" :loading="modifyFormSubmitting" :disabled="modifyTimeConflict">
+          {{ $t('common.confirm') }}
+        </el-button>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -235,11 +438,68 @@ export default {
         ]
       },
 
+      // 修改预约相关
+      modifyDialogVisible: false,
+      modifying: false,
+      modifyForm: {
+        reservationCode: ''
+      },
+      modifyRules: {
+        reservationCode: [
+          { required: true, message: this.$t('reservation.codeOrContactRequired'), trigger: 'blur' }
+        ]
+      },
+
+      // 修改预约表单相关
+      modifyFormDialogVisible: false,
+      modifyFormSubmitting: false,
+      modifyTimeConflict: false,
+      modifyConflictMessage: '',
+      modifyConflictingReservations: [],
+      modifyTimeAvailabilityChecked: false,
+      modifyFormData: {
+        startDateTime: '',
+        endDateTime: '',
+        purpose: '',
+        userEmail: ''
+      },
+      modifyFormRules: {
+        startDateTime: [
+          { required: true, message: this.$t('reservation.startTimeRequired'), trigger: 'change' }
+        ],
+        endDateTime: [
+          { required: true, message: this.$t('reservation.endTimeRequired'), trigger: 'change' }
+        ],
+        userEmail: [
+          { required: true, message: this.$t('reservation.emailRequired'), trigger: 'blur' },
+          { type: 'email', message: this.$t('reservation.emailFormat'), trigger: 'blur' }
+        ]
+      },
+      dateTimePickerOptions: {
+        disabledDate: (time) => {
+          return time.getTime() < Date.now() - 8.64e7; // 8.64e7是一天的毫秒数
+        }
+      },
+
       // 设备筛选相关
       selectedEquipment: null,
       equipmentList: []
     };
   },
+
+  computed: {
+    // 修改时间冲突标题
+    modifyTimeConflictTitle() {
+      if (this.modifyConflictingReservations && this.modifyConflictingReservations.length > 0) {
+        return this.$t('reservation.timeConflictWith', { count: this.modifyConflictingReservations.length })
+      } else if (this.modifyConflictMessage) {
+        return this.modifyConflictMessage
+      } else {
+        return this.$t('reservation.timeSlotOccupied')
+      }
+    }
+  },
+
   mounted() {
     this.loadEvents();
     this.loadEquipmentList();
@@ -328,6 +588,20 @@ export default {
     // 处理事件点击
     handleEventClick(info) {
       this.selectedEvent = info.event;
+
+      // 确保 extendedProps 中包含 reservationCode 和 reservationNumber
+      if (info.event.extendedProps) {
+        // 如果没有 reservationCode，尝试从其他属性中获取
+        if (!info.event.extendedProps.reservationCode && info.event.extendedProps.reservation_code) {
+          info.event.extendedProps.reservationCode = info.event.extendedProps.reservation_code;
+        }
+
+        // 如果没有 reservationNumber，尝试从其他属性中获取
+        if (!info.event.extendedProps.reservationNumber && info.event.extendedProps.reservation_number) {
+          info.event.extendedProps.reservationNumber = info.event.extendedProps.reservation_number;
+        }
+      }
+
       this.detailVisible = true;
     },
 
@@ -399,6 +673,12 @@ export default {
 
       // 在周视图和日视图中自定义事件内容
       if (info.view.type === 'timeGridWeek' || info.view.type === 'timeGridDay') {
+        // 计算事件持续时间（分钟）
+        const start = info.event.start;
+        const end = info.event.end;
+        const durationMs = end - start;
+        const durationMinutes = Math.round(durationMs / (1000 * 60));
+
         // 清除默认内容
         const eventContent = info.el.querySelector('.fc-event-main');
         if (eventContent) {
@@ -406,25 +686,66 @@ export default {
           const customContent = document.createElement('div');
           customContent.className = 'custom-event-content';
 
-          // 设备名称
-          const title = document.createElement('div');
-          title.className = 'event-title';
-          title.textContent = info.event.title;
-          customContent.appendChild(title);
+          // 根据预约时长决定显示内容
+          if (durationMinutes <= 30) {
+            // 短时间预约：只显示设备名称+时间（一排）
+            const shortContent = document.createElement('div');
+            shortContent.className = 'event-short-content';
 
-          // 使用人
-          const user = document.createElement('div');
-          user.className = 'event-user';
-          user.textContent = info.event.extendedProps.userName || '';
-          customContent.appendChild(user);
+            // 智能提取设备名称（优先显示中文，备选英文前两个单词）
+            let deviceName;
+            const title = info.event.title;
 
-          // 时间
-          const time = document.createElement('div');
-          time.className = 'event-time';
-          const startTime = info.event.start ? info.event.start.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit', hour12: false}) : '';
-          const endTime = info.event.end ? info.event.end.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit', hour12: false}) : '';
-          time.textContent = `${startTime}-${endTime}`;
-          customContent.appendChild(time);
+            // 检测是否包含中文字符
+            const chineseRegex = /[\u4e00-\u9fa5]/;
+            if (chineseRegex.test(title)) {
+              // 如果包含中文，提取第一个中文词组
+              const chineseMatch = title.match(/[\u4e00-\u9fa5]+/);
+              deviceName = chineseMatch ? chineseMatch[0] : title.split(' ')[0];
+            } else {
+              // 如果不包含中文，使用英文逻辑（前两个单词）
+              const titleParts = title.split(' ');
+              if (titleParts.length >= 2) {
+                deviceName = `${titleParts[0]} ${titleParts[1]}`;
+              } else {
+                deviceName = titleParts[0];
+              }
+            }
+
+            // 格式化时间
+            const startTime = start ? start.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit', hour12: false}) : '';
+            const endTime = end ? end.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit', hour12: false}) : '';
+
+            shortContent.textContent = `${deviceName} ${startTime}-${endTime}`;
+            shortContent.style.fontWeight = 'bold';
+            shortContent.style.fontSize = '0.9em';
+            shortContent.style.textAlign = 'center';
+            shortContent.style.lineHeight = '1.2';
+            shortContent.style.color = '#000000';
+
+            customContent.appendChild(shortContent);
+          } else {
+            // 长时间预约：保持原有的3排显示
+            // 设备名称
+            const title = document.createElement('div');
+            title.className = 'event-title';
+            title.textContent = info.event.title;
+            customContent.appendChild(title);
+
+            // 使用人
+            const user = document.createElement('div');
+            user.className = 'event-user';
+            user.textContent = info.event.extendedProps.userName || '';
+            customContent.appendChild(user);
+
+            // 时间
+            const time = document.createElement('div');
+            time.className = 'event-time';
+            const startTime = start ? start.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit', hour12: false}) : '';
+            const endTime = end ? end.toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit', hour12: false}) : '';
+            time.textContent = `${startTime}-${endTime}`;
+            customContent.appendChild(time);
+          }
 
           // 替换内容
           eventContent.innerHTML = '';
@@ -445,6 +766,8 @@ export default {
     changeView(viewName) {
       const calendarApi = this.$refs.fullCalendar.getApi();
       calendarApi.changeView(viewName);
+      // 更新当前视图类型
+      this.calendarOptions.initialView = viewName;
     },
 
     // 跳转到今天
@@ -483,7 +806,8 @@ export default {
 
     // 格式化日期时间
     formatDateTime(date) {
-      return formatDate(date, 'YYYY-MM-DD HH:mm');
+      // 不进行时区转换（第三个参数设为false），避免时间多加8小时
+      return formatDate(date, 'YYYY-MM-DD HH:mm', false);
     },
 
     // 格式化短时间（只显示小时和分钟）
@@ -614,6 +938,226 @@ export default {
       this.cancelDialogVisible = true;
     },
 
+    // 检查预约是否已开始
+    isReservationStarted(event) {
+      const now = new Date();
+      const startTime = new Date(event.start);
+      return startTime <= now;
+    },
+
+    // 显示修改对话框
+    showModifyDialog() {
+      this.modifyForm.reservationCode = '';
+      this.modifyDialogVisible = true;
+    },
+
+    // 确认修改预约
+    async confirmModifyDialog() {
+      try {
+        // 验证表单
+        await this.$refs.modifyForm.validate();
+
+        // 检查输入的预约码是否与当前预约码匹配
+        if (this.modifyForm.reservationCode !== this.selectedEvent.extendedProps.reservationCode) {
+          this.$message.error(this.$t('reservation.checkCodeAndContact'));
+          return;
+        }
+
+        // 关闭验证对话框
+        this.modifyDialogVisible = false;
+
+        // 初始化修改表单数据
+        let startDateTime, endDateTime;
+
+        try {
+          startDateTime = new Date(this.selectedEvent.start);
+          endDateTime = new Date(this.selectedEvent.end);
+
+          // 检查日期是否有效
+          if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+            throw new Error('Invalid date');
+          }
+        } catch (e) {
+          console.error('Error creating date objects:', e);
+          // 使用当前时间作为默认值
+          startDateTime = new Date();
+          endDateTime = new Date();
+          endDateTime.setHours(endDateTime.getHours() + 1); // 结束时间默认为当前时间加1小时
+        }
+
+        // 手动格式化日期时间，确保格式与el-date-picker的value-format属性匹配
+        const formatDateTimeForPicker = (date) => {
+          if (!date || isNaN(date.getTime())) return null;
+
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          const seconds = String(date.getSeconds()).padStart(2, '0');
+
+          return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        };
+
+        this.modifyFormData = {
+          startDateTime: formatDateTimeForPicker(startDateTime),
+          endDateTime: formatDateTimeForPicker(endDateTime),
+          purpose: this.selectedEvent.extendedProps.purpose || '',
+          userEmail: this.selectedEvent.extendedProps.userEmail || ''
+        };
+
+        // 显示修改表单对话框
+        this.modifyFormDialogVisible = true;
+      } catch (error) {
+        console.error('Failed to validate modification form:', error);
+        this.$message.error(this.$t('error.serverError'));
+      } finally {
+        this.modifying = false;
+      }
+    },
+
+    // 验证时间范围
+    validateTimeRange() {
+      const startTime = new Date(this.modifyFormData.startDateTime);
+      const endTime = new Date(this.modifyFormData.endDateTime);
+
+      if (startTime >= endTime) {
+        this.$message.error(this.$t('reservation.invalidTime'));
+        return false;
+      }
+
+      return true;
+    },
+
+    // 检查修改时间可用性
+    async checkModifyTimeAvailability() {
+      if (!this.modifyFormData.startDateTime || !this.modifyFormData.endDateTime) {
+        this.modifyTimeAvailabilityChecked = false
+        return
+      }
+
+      // 添加更严格的验证
+      if (this.modifyFormData.startDateTime >= this.modifyFormData.endDateTime) {
+        this.modifyTimeConflict = true
+        this.modifyTimeAvailabilityChecked = false
+        return
+      }
+
+      try {
+        const equipmentId = this.selectedEvent.extendedProps.equipmentId
+        const startDate = this.modifyFormData.startDateTime
+        const endDate = this.modifyFormData.endDateTime
+
+        // 调用API检查时间可用性，排除当前预定
+        const excludeId = this.selectedEvent.id  // 使用事件的id字段，而不是extendedProps.reservationId
+        const params = {
+          start_date: startDate,
+          end_date: endDate
+        }
+
+        // 只有当excludeId存在且不为null/undefined时才添加参数
+        if (excludeId != null && excludeId !== undefined) {
+          params.exclude_reservation_id = excludeId
+        }
+
+
+
+        const response = await this.$http.get(`/api/equipment/${equipmentId}/availability`, { params })
+
+        // 检查是否有冲突 - 处理API响应格式
+        if (response.data.specific_time_check) {
+          // 如果是具体时间段检查
+          console.log('具体时间段检查结果:', response.data.available)
+          this.modifyTimeConflict = response.data.available.includes(false)
+        } else {
+          // 如果是按日期检查
+          console.log('按日期检查结果:', response.data.available)
+          this.modifyTimeConflict = response.data.available.includes(false)
+        }
+
+        // 设置冲突信息
+        if (this.modifyTimeConflict) {
+          console.log('检测到时间冲突:', response.data.available)
+
+          // 获取冲突的预定信息
+          this.modifyConflictingReservations = response.data.conflicting_reservations || []
+
+          // 检查是否是因为达到最大同时预定数量
+          if (response.data.allow_simultaneous && response.data.max_simultaneous > 1) {
+            this.modifyConflictMessage = this.$t('reservation.maxSimultaneousReached', { count: response.data.max_simultaneous });
+          } else {
+            this.modifyConflictMessage = '';
+          }
+        } else {
+          console.log('时间段可用')
+          this.modifyConflictMessage = '';
+          this.modifyConflictingReservations = [];
+        }
+
+        this.modifyTimeAvailabilityChecked = true
+      } catch (error) {
+        console.error('Failed to check availability:', error)
+        this.modifyTimeConflict = true
+        this.modifyTimeAvailabilityChecked = false
+        this.modifyConflictingReservations = []
+        this.$message.error(this.$t('common.error'))
+      }
+    },
+
+    // 提交修改表单
+    async submitModifyForm() {
+      try {
+        // 验证表单
+        await this.$refs.modifyFormRef.validate();
+
+        // 验证时间范围
+        if (!this.validateTimeRange()) return;
+
+        // 检查时间冲突
+        if (this.modifyTimeConflict) {
+          this.$message.error(this.$t('reservation.timeConflict'))
+          return
+        }
+
+        this.modifyFormSubmitting = true;
+
+        // 构建更新数据
+        const updateData = {
+          start_datetime: this.modifyFormData.startDateTime,
+          end_datetime: this.modifyFormData.endDateTime,
+          purpose: this.modifyFormData.purpose || undefined,
+          user_email: this.modifyFormData.userEmail || undefined,
+          lang: this.$i18n.locale
+        };
+
+        // 调用更新API - 传递预约序号以确保修改正确的子预约
+        const response = await reservationApi.updateReservation(
+          this.selectedEvent.extendedProps.reservationCode,
+          updateData,
+          this.selectedEvent.extendedProps.reservationNumber  // 传递预约序号
+        );
+
+        if (response.data && response.data.success) {
+          this.$message.success(this.$t('reservation.updateSuccess'));
+          this.modifyFormDialogVisible = false;
+
+          // 关闭预约详情弹窗
+          this.detailVisible = false;
+
+          // 重新加载日历事件
+          this.loadEvents();
+        } else {
+          const errorMessage = response.data && response.data.message ? response.data.message : this.$t('reservation.updateFailed');
+          this.$message.error(errorMessage);
+        }
+      } catch (error) {
+        console.error('Failed to update reservation:', error);
+        this.$message.error(this.$t('error.serverError'));
+      } finally {
+        this.modifyFormSubmitting = false;
+      }
+    },
+
     // 取消预约
     async cancelReservation() {
       try {
@@ -692,6 +1236,313 @@ export default {
   display: flex;
   justify-content: center;
   margin-bottom: 15px;
+}
+
+.status-legend-row {
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.status-legend {
+  width: 100%;
+}
+
+.status-legend-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.status-colors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 15px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.status-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  margin-right: 5px;
+}
+
+.confirmed-color {
+  background-color: rgba(103, 194, 58, 0.7);
+  border: 1px solid rgba(103, 194, 58, 0.9);
+}
+
+.inuse-color {
+  background-color: rgba(64, 158, 255, 0.7);
+  border: 1px solid rgba(64, 158, 255, 0.9);
+}
+
+.cancel-tip-container {
+  margin-top: 5px;
+}
+
+.cancel-tip {
+  font-weight: bold;
+}
+
+.cancel-tip i {
+  margin-right: 5px;
+  color: #ff4040;
+}
+
+
+.update-tip-container {
+  margin-top: 5px;
+}
+
+.update-tip {
+  font-weight: bold;
+}
+
+.update-tip i {
+  margin-right: 5px;
+  color: #40a9ff;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+  .calendar-view {
+    padding: 10px;
+  }
+
+  .calendar-header {
+    margin-bottom: 15px;
+  }
+
+  /* 日历头部布局调整 */
+  .calendar-header .el-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .calendar-header .el-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+  }
+
+  /* 标题区域 */
+  .calendar-header .el-col:first-child {
+    text-align: center;
+  }
+
+  .calendar-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+  }
+
+  .calendar-current-date {
+    font-size: 1rem;
+    margin-top: 0;
+  }
+
+  /* 控制按钮区域 */
+  .calendar-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .calendar-controls .el-button-group {
+    margin-bottom: 8px;
+  }
+
+  .calendar-controls .el-button {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  /* 设备筛选器 */
+  .equipment-filter .el-select {
+    width: 100% !important;
+    max-width: 300px;
+  }
+
+  /* 状态图例 */
+  .status-colors {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .status-legend-content {
+    gap: 8px;
+  }
+
+  .status-item {
+    font-size: 13px;
+  }
+
+  /* FullCalendar 移动端优化 */
+  /* 日历头部星期几显示优化 */
+  :deep(.fc-col-header-cell) {
+    padding: 4px 2px !important;
+    font-size: 12px !important;
+  }
+
+  :deep(.fc-col-header-cell-cushion) {
+    padding: 2px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+
+  /* 月视图中的星期几文字换行 */
+  :deep(.fc-daygrid-header .fc-col-header-cell-cushion) {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    max-width: 100% !important;
+    display: block !important;
+    height: auto !important;
+    min-height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* 周视图和日视图的头部优化 */
+  :deep(.fc-timegrid-header .fc-col-header-cell-cushion) {
+    font-size: 11px !important;
+    line-height: 1.1 !important;
+    padding: 2px 1px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  /* 日期数字样式 */
+  :deep(.fc-daygrid-day-number) {
+    font-size: 14px !important;
+    padding: 2px !important;
+  }
+
+  /* 时间轴标签 */
+  :deep(.fc-timegrid-slot-label) {
+    font-size: 11px !important;
+    padding: 2px !important;
+  }
+
+  /* 事件文字大小调整 */
+  :deep(.fc-event-title) {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+  }
+
+  :deep(.fc-event-time) {
+    font-size: 10px !important;
+  }
+
+  /* 月视图事件优化 */
+  :deep(.fc-daygrid-event) {
+    font-size: 11px !important;
+    padding: 1px 2px !important;
+    margin: 1px 0 !important;
+  }
+
+  /* 时间网格事件优化 */
+  :deep(.fc-timegrid-event) {
+    font-size: 10px !important;
+    min-height: 20px !important;
+  }
+
+  /* 今天按钮和导航按钮 */
+  :deep(.fc-button) {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+  }
+
+  /* 特别针对英文星期几名称的换行处理 */
+  :deep(.fc-col-header-cell-cushion) {
+    /* 强制英文单词换行 */
+    word-break: break-all !important;
+    overflow-wrap: anywhere !important;
+    /* 设置最小高度确保有足够空间显示换行文字 */
+    min-height: 35px !important;
+    /* 使用flex布局居中显示 */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    /* 允许多行显示 */
+    white-space: normal !important;
+    line-height: 1.1 !important;
+  }
+
+  /* 日历表格头部行高调整 */
+  :deep(.fc-col-header) {
+    height: auto !important;
+    min-height: 40px !important;
+  }
+
+  :deep(.fc-col-header-row) {
+    height: auto !important;
+    min-height: 40px !important;
+  }
+
+  /* 确保日历头部有足够的空间 */
+  :deep(.fc-daygrid-header) {
+    margin-bottom: 5px !important;
+  }
+
+  /* 月视图日期格子高度调整 */
+  :deep(.fc-daygrid-day) {
+    min-height: 80px !important;
+  }
+
+  /* 周视图和日视图的列头部高度 */
+  :deep(.fc-timegrid-header .fc-col-header-cell) {
+    height: auto !important;
+    min-height: 40px !important;
+  }
+
+  /* 移动端周末字体颜色强制设置为红色 */
+  /* 周末表头文字颜色 - 红色 */
+  :deep(.fc-col-header-cell.fc-day-sat),
+  :deep(.fc-col-header-cell.fc-day-sun) {
+    color: #ff0000 !important;
+  }
+
+  :deep(.fc-col-header-cell.fc-day-sat .fc-col-header-cell-cushion),
+  :deep(.fc-col-header-cell.fc-day-sun .fc-col-header-cell-cushion) {
+    color: #ff0000 !important;
+  }
+
+  /* 月视图中周末日期数字颜色 - 红色 */
+  :deep(.fc-daygrid-day.fc-day-sat .fc-daygrid-day-number),
+  :deep(.fc-daygrid-day.fc-day-sun .fc-daygrid-day-number) {
+    color: #ff0000 !important;
+  }
+
+  /* 周视图和日视图中周末列头文字样式 - 红色 */
+  :deep(.fc-timeGridWeek-view .fc-col-header-cell.fc-day-sat .fc-col-header-cell-cushion),
+  :deep(.fc-timeGridWeek-view .fc-col-header-cell.fc-day-sun .fc-col-header-cell-cushion),
+  :deep(.fc-timeGridDay-view .fc-col-header-cell.fc-day-sat .fc-col-header-cell-cushion),
+  :deep(.fc-timeGridDay-view .fc-col-header-cell.fc-day-sun .fc-col-header-cell-cushion) {
+    color: #ff0000 !important;
+  }
+
+  /* 确保周末的所有文字都是红色，包括换行后的文字 */
+  :deep(.fc-day-sat .fc-col-header-cell-cushion),
+  :deep(.fc-day-sun .fc-col-header-cell-cushion),
+  :deep(.fc-day-sat),
+  :deep(.fc-day-sun) {
+    color: #ff0000 !important;
+  }
 }
 
 .recurring-notice {
@@ -1235,6 +2086,142 @@ export default {
   border-width: 5px 0px 0 0; /* 加大箭头 */
 }
 
+/* 修复日视图右侧的多余空白 */
+:deep(.fc-timegrid-slots table),
+:deep(.fc-timegrid-cols table) {
+  width: 100% !important;
+}
+
+/* 让日视图列容器更好地利用可用空间 */
+:deep(.fc-timegrid-col.fc-day) {
+  padding-right: 0 !important; /* 移除右侧内边距 */
+  max-width: none !important; /* 移除最大宽度限制 */
+}
+
+/* 修复日视图整体容器宽度 */
+:deep(.fc-timegrid-body) {
+  width: 100% !important;
+}
+
+/* 移除日视图主体右侧的内边距/外边距 */
+:deep(.fc-timegrid-body .fc-scroller-liquid-absolute) {
+  right: 0 !important;
+}
+
+/* 预约块布局优化 */
+:deep(.fc-timegrid-event-harness) {
+  /* 保持原有的自适应宽度，但移除过多的边距 */
+  margin: 1px !important;
+}
+
+/* 确保同时间段的预约能合理并排 */
+:deep(.fc-timegrid-col-events) {
+  /* 仅调整右边距，不影响自适应布局 */
+  margin-right: 0 !important;
+  right: 0 !important;
+}
+
+/* 短时间预约样式 */
+:deep(.event-short-content) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  padding: 2px 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #000000 !important;
+}
+
+/* 确保短时间预约的容器样式 */
+:deep(.custom-event-content .event-short-content) {
+  width: 100% !important;
+  min-height: 20px !important;
+}
+
+/* 移动端弹窗优化 */
+@media (max-width: 768px) {
+  /* 预约详情弹窗移动端优化 */
+  :deep(.calendar-detail-dialog .el-dialog) {
+    width: 85% !important;
+    margin: 0 auto !important;
+    top: 5vh !important;
+  }
+
+  :deep(.calendar-detail-dialog .el-dialog__body) {
+    padding: 15px !important;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  /* 取消预约弹窗移动端优化 */
+  :deep(.calendar-cancel-dialog .el-dialog) {
+    width: 80% !important;
+    margin: 0 auto !important;
+    top: 10vh !important;
+  }
+
+  :deep(.calendar-cancel-dialog .el-dialog__body) {
+    padding: 15px !important;
+  }
+
+  /* 修改预约弹窗移动端优化 */
+  :deep(.calendar-modify-dialog .el-dialog) {
+    width: 80% !important;
+    margin: 0 auto !important;
+    top: 10vh !important;
+  }
+
+  :deep(.calendar-modify-dialog .el-dialog__body) {
+    padding: 15px !important;
+  }
+
+  /* 修改预约表单弹窗移动端优化 */
+  :deep(.calendar-modify-form-dialog .el-dialog) {
+    width: 95% !important;
+    margin: 0 auto !important;
+    top: 5vh !important;
+  }
+
+  :deep(.calendar-modify-form-dialog .el-dialog__body) {
+    padding: 15px !important;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  /* 移动端遮罩层优化 - 确保遮罩层不会阻挡弹窗交互 */
+  :deep(.v-modal) {
+    background-color: rgba(0, 0, 0, 0.3) !important; /* 降低遮罩层透明度 */
+    pointer-events: none !important; /* 让遮罩层不阻挡点击事件 */
+  }
+
+  /* 确保弹窗本身可以接收点击事件 */
+  :deep(.el-dialog__wrapper) {
+    pointer-events: auto !important;
+  }
+
+  :deep(.el-dialog) {
+    pointer-events: auto !important;
+  }
+
+  /* 弹窗按钮在移动端的优化 */
+  :deep(.action-buttons) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  :deep(.action-buttons .el-button) {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  :deep(.dialog-footer .el-button) {
+    width: 48% !important;
+    margin: 0 1% !important;
+  }
+}
 
 </style>
 

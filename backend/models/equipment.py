@@ -2,7 +2,7 @@
 设备模型
 Equipment model
 """
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func, Boolean
 from backend.utils.db_utils import BeijingNow
 from sqlalchemy.orm import relationship
 
@@ -27,6 +27,10 @@ class Equipment(Base):
     video_tutorial = Column(String(255), comment="视频教程链接")
     created_at = Column(DateTime, default=BeijingNow(), comment="创建时间")
     updated_at = Column(DateTime, default=BeijingNow(), onupdate=BeijingNow(), comment="更新时间")
+    
+    # 可同时预定功能相关字段
+    allow_simultaneous = Column(Boolean, default=False, comment="是否允许同时预定")
+    max_simultaneous = Column(Integer, default=1, comment="最大同时预定数量")
 
     # 类别关联
     category_id = Column(Integer, ForeignKey("equipment_category.id"), nullable=True)
@@ -35,6 +39,9 @@ class Equipment(Base):
     # 预约关系
     reservations = relationship("Reservation", back_populates="equipment", cascade="all, delete-orphan")
     recurring_reservations = relationship("RecurringReservation", back_populates="equipment", cascade="all, delete-orphan")
+    
+    # 时间段关系
+    time_slots = relationship("EquipmentTimeSlot", back_populates="equipment", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Equipment {self.name}>"

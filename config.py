@@ -49,9 +49,9 @@ EMAIL_SMTP_SERVER = "smtp.example.com"   # SMTP服务器 / SMTP server
 EMAIL_SMTP_PORT = 587                    # SMTP端口 / SMTP port
 
 # JWT设置 / JWT settings
-SECRET_KEY = "your-secret-key-here"  # 密钥 (请在生产环境中修改) / Secret key (please change in production)
+SECRET_KEY = "3a7d4e1f8c45b92a0d5f7e3c8b1a9d6e2f0c7d5a1e9f3b8c0d4a7e6f2b1c"  # 密钥 (请在生产环境中修改) / Secret key (please change in production)
 ALGORITHM = "HS256"                  # 算法 / Algorithm
-ACCESS_TOKEN_EXPIRE_MINUTES = 30     # 访问令牌过期时间 (分钟) / Access token expire time (minutes)
+ACCESS_TOKEN_EXPIRE_MINUTES = 60     # 访问令牌过期时间 (分钟) / Access token expire time (minutes)
 
 # Unsplash API设置 / Unsplash API settings
 UNSPLASH_ACCESS_KEY = "your-unsplash-access-key"  # Unsplash访问密钥 / Unsplash access key

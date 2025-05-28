@@ -4,6 +4,8 @@ import router from './router'
 import store from './store'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
+// 引入暗色主题CSS
+import '@/assets/css/dark-theme.css'
 import VueI18n from 'vue-i18n'
 import axios from 'axios'
 import enLocale from 'element-ui/lib/locale/lang/en'
@@ -15,6 +17,7 @@ import * as api from './api'
 
 // 导入权限控制
 import './router/permission'
+import { updatePageTitle } from './router/permission'
 
 // 导入富文本编辑器
 // 暂时注释掉富文本编辑器相关代码
@@ -36,6 +39,12 @@ const token = localStorage.getItem('token')
 if (token) store.commit('SET_TOKEN', token)
 const user = localStorage.getItem('user')
 if (user) store.commit('SET_USER', JSON.parse(user))
+
+// 初始化主题设置
+const darkMode = localStorage.getItem('darkMode') === 'true'
+if (darkMode) {
+  document.documentElement.classList.add('dark-mode')
+}
 
 // 配置axios
 // 动态获取API基础URL
@@ -71,15 +80,14 @@ axios.interceptors.request.use(config => {
 axios.interceptors.response.use(response => {
   return response
 }, error => {
-  // 添加详细日志，排查 401 和异常来源
-  console.error('AXIOS ERROR:', error)
-  if (error.response) {
-    console.error('AXIOS ERROR RESPONSE:', error.response)
-    console.error('AXIOS ERROR URL:', error.config && error.config.url)
-  }
-  if (error.response) {
-    // 处理401错误（会话过期）
-    if (error.response.status === 401) {
+  // 检查是否是401错误
+  if (error.response && error.response.status === 401) {
+    // 检查当前路由是否已经是登录页或非管理员页面
+    const isAdminRoute = router.currentRoute.path.startsWith('/admin') &&
+                         router.currentRoute.path !== '/admin/login'
+
+    // 只有在管理员页面才显示提示和重定向
+    if (isAdminRoute) {
       // 显示友好的提示信息
       Vue.prototype.$message({
         message: '您的会话已过期，请重新登录',
@@ -88,12 +96,28 @@ axios.interceptors.response.use(response => {
       })
 
       store.dispatch('logout')
-      // 避免重复导航到登录页
-      if (router.currentRoute.path !== '/admin/login') {
-        router.push('/admin/login')
-      }
+      router.push('/admin/login')
     }
+
+    // 对于仪表盘和统计API的401错误，不在控制台显示错误
+    if (error.config && (
+        error.config.url.includes('/api/statistics') ||
+        error.config.url.includes('/dashboard')
+      )) {
+      // 静默处理这些API的401错误
+      console.log('未登录状态下访问受保护的API，已静默处理')
+      return Promise.reject({
+        ...error,
+        _silenced: true // 添加标记，表示此错误已被静默处理
+      })
+    }
+  } else if (error.response) {
+    // 对于非401错误，记录详细信息
+    console.error('AXIOS ERROR:', error)
+    console.error('AXIOS ERROR RESPONSE:', error.response)
+    console.error('AXIOS ERROR URL:', error.config && error.config.url)
   }
+
   return Promise.reject(error)
 })
 
@@ -115,6 +139,12 @@ const i18n = new VueI18n({
   silentTranslationWarn: true
 })
 
+// 输出初始语言设置
+console.log('Initial language setting:', i18n.locale)
+
+// 设置HTML文档的lang属性
+document.querySelector('html').setAttribute('lang', i18n.locale)
+
 // 同步语言设置
 store.watch(
   state => state.language,
@@ -122,6 +152,11 @@ store.watch(
     i18n.locale = newLang
     document.querySelector('html').setAttribute('lang', newLang)
     console.log('Language changed to:', newLang)
+
+    // 更新页面标题
+    setTimeout(() => {
+      updatePageTitle()
+    }, 0)
   }
 )
 

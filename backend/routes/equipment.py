@@ -174,6 +174,7 @@ async def get_equipment_availability_api(
     equipment_id: int,
     start_date: str,
     end_date: str,
+    exclude_reservation_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -186,8 +187,9 @@ async def get_equipment_availability_api(
         if not equipment:
             raise HTTPException(status_code=404, detail="设备不存在")
 
-        # 获取设备预定情况
-        availability = is_equipment_available(db, equipment_id, start_date, end_date)
+        # 获取设备预定情况，传递排除的预定ID
+        availability = is_equipment_available(db, equipment_id, start_date, end_date, exclude_reservation_id)
+
         return availability
     except HTTPException:
         raise

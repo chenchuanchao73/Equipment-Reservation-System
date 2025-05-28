@@ -100,6 +100,11 @@ class RecurringReservation(RecurringReservationBase):
     equipment_name: Optional[str] = None
     equipment_category: Optional[str] = None
     equipment_location: Optional[str] = None
+    # 添加以下字段
+    conflicts: Optional[str] = None
+    total_planned: Optional[int] = None
+    created_count: Optional[int] = None
+    conflict_dates: Optional[List[str]] = None
 
     class Config:
         from_attributes = True

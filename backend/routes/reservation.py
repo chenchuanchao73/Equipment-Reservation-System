@@ -3,6 +3,7 @@
 Reservation API routes
 """
 import logging
+import asyncio
 from typing import Optional
 from datetime import datetime, timedelta
 import traceback
@@ -13,23 +14,25 @@ from sqlalchemy import func
 from backend.database import get_db
 from backend.models.reservation import Reservation
 from backend.models.equipment import Equipment
+from backend.models.reservation_history import ReservationHistory
 from backend.schemas.reservation import (
     ReservationCreate, ReservationUpdate,
     ReservationList, Reservation as ReservationSchema,
-    ReservationResponse, ReservationCancel
+    ReservationResponse, ReservationCancel, ReservationExportRequest
 )
 from backend.routes.crud.reservation import (
     create_reservation, get_reservation_by_code, get_reservation_by_id,
     get_reservations, get_reservation_count,
-    update_reservation, cancel_reservation, is_equipment_available
+    update_reservation, cancel_reservation, cancel_reservation_by_code, is_equipment_available
 )
 from backend.routes.crud.equipment import get_equipment
-from backend.utils.date_utils import format_datetime
+from backend.utils.date_utils import format_datetime, parse_datetime
 from backend.utils.email_sender import (
     send_reservation_confirmation, send_reservation_update,
     send_reservation_cancellation
 )
-from backend.routes.auth import get_current_admin, optional_admin
+from backend.routes.auth import get_current_admin, optional_admin, get_current_user
+from backend.routes.crud.time_slot import get_time_slots_for_equipment
 
 router = APIRouter(
     prefix="/api/reservation",
@@ -38,69 +41,66 @@ router = APIRouter(
 
 logger = logging.getLogger(__name__)
 
-@router.post("/", response_model=ReservationResponse)
-async def create_reservation_api(
-    reservation: ReservationCreate,
-    db: Session = Depends(get_db)
-):
+@router.post("/")
+def create_reservation_endpoint(reservation: ReservationCreate, db: Session = Depends(get_db)):
     """
-    创建新预定
-    Create new reservation
+    创建预约
+    Create reservation
     """
     try:
-        # 检查设备是否存在
-        equipment = get_equipment(db, reservation.equipment_id)
-        if not equipment:
-            return ReservationResponse(success=False, message="设备不存在", data=None)
+        print(f"[调试信息] 收到预约请求数据: {reservation.dict()}")
 
-        # 创建预定
+        # 处理API调用的预约创建
         db_reservation, message = create_reservation(db, reservation)
-
-        if not db_reservation:
-            return ReservationResponse(success=False, message=message, data=None)
-
-        # 生成预定二维码
-        base_url = "http://localhost:8080"
-        # 二维码功能已移除
-
-        # 准备邮件数据
-        if reservation.user_email:
-            email_data = {
-                "reservation_code": db_reservation.reservation_code,
-                "user_name": db_reservation.user_name,
-                "equipment_name": equipment.name,
-                "equipment_category": equipment.category,
-                "location": equipment.location,
-                "start_datetime": format_datetime(db_reservation.start_datetime),
-                "end_datetime": format_datetime(db_reservation.end_datetime),
-                "purpose": db_reservation.purpose,
-                "description": equipment.description,
-                # 二维码功能已移除
-                "site_url": "http://localhost:8000",  # 应该从配置中获取
-                "status": "已确认 / Confirmed"  # 补充状态字段，确保邮件模板能显示
+        if db_reservation is None:
+            print(f"[调试信息] 创建预约失败: {message}")
+            return {
+                "success": False,
+                "message": message
             }
 
-            # 发送邮件
-            await send_reservation_confirmation(
-                to_email=reservation.user_email,
-                reservation_data=email_data,
-                lang=reservation.lang or "zh_CN",
-                db=db
-            )
-
-        # 返回预定信息
-        return ReservationResponse(
-            success=True,
-            message="预定创建成功",
-            data=db_reservation
-        )
+        # 返回预约结果
+        return {
+            "success": True,
+            "data": {
+                "id": db_reservation.id,
+                "reservation_number": db_reservation.reservation_number,
+                "reservation_code": db_reservation.reservation_code,
+                "equipment_id": db_reservation.equipment_id,
+                "equipment_name": db_reservation.equipment.name if db_reservation.equipment else None,
+                "user_name": db_reservation.user_name,
+                "start_datetime": db_reservation.start_datetime.isoformat(),
+                "end_datetime": db_reservation.end_datetime.isoformat(),
+                "status": db_reservation.status,
+                "message": "预约创建成功"
+            }
+        }
     except Exception as e:
-        logger.error(f"创建预定出错: {str(e)}")
-        return ReservationResponse(
-            success=False,
-            message=f"创建预定出错: {str(e)}",
-            data=None
-        )
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"[调试信息] 预约创建过程中出现异常: {str(e)}")
+        print(f"[调试信息] 异常详情: {error_details}")
+
+        return {
+            "success": False,
+            "message": f"创建预约失败: {str(e)}"
+        }
+
+@router.delete("/{reservation_id}")
+def cancel_reservation_endpoint(reservation_id: int, db: Session = Depends(get_db)):
+    """
+    取消预约
+    Cancel reservation
+    """
+    # 调用取消预约函数
+    success, message = cancel_reservation(db, reservation_id, user_cancel=True)
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+
+    return {
+        "success": True,
+        "message": message
+    }
 
 @router.get("/", response_model=ReservationList)
 async def get_reservations_api(
@@ -443,6 +443,11 @@ async def get_reservation_by_code_api(
                         elif isinstance(parsed_number, dict) and '$oid' in parsed_number:
                             reservation_number = parsed_number['$oid']
                             logger.info(f"从JSON对象中提取$oid: {reservation_number}")
+                        # 处理时间戳参数，如果JSON对象只包含_t字段，则忽略这个参数
+                        elif isinstance(parsed_number, dict) and '_t' in parsed_number and len(parsed_number) == 1:
+                            logger.info(f"检测到时间戳参数 _t，忽略此参数: {parsed_number}")
+                            reservation_number = None
+                            # 如果只有时间戳参数，则不将其视为预约序号
                     except json.JSONDecodeError:
                         logger.error(f"无法解析JSON格式的预约序号: {reservation_number}")
 
@@ -622,16 +627,27 @@ async def get_reservation_by_code_api(
 async def update_reservation_api(
     reservation_code: str,
     reservation_update: ReservationUpdate,
-    db: Session = Depends(get_db)
+    reservation_number: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_admin = Depends(optional_admin)
 ):
     """
     更新预定信息
     Update reservation information
+
+    Args:
+        reservation_code: 预约码
+        reservation_update: 更新数据
+        reservation_number: 预约序号（可选），如果提供则优先使用预约序号查询
+        db: 数据库会话
+        current_admin: 当前管理员
     """
     try:
-        # 获取原预定信息
-        # 不传递reservation_number参数，以获取与预约码匹配的任何预约
-        reservation = get_reservation_by_code(db, reservation_code, None)
+        # 记录API调用信息
+        logger.info(f"[更新预约API] 预约码={reservation_code}, 预约序号={reservation_number}")
+
+        # 获取原预定信息 - 传递reservation_number参数
+        reservation = get_reservation_by_code(db, reservation_code, reservation_number)
         if not reservation:
             return ReservationResponse(success=False, message="预定不存在", data=None)
 
@@ -639,8 +655,19 @@ async def update_reservation_api(
         if reservation.status == "cancelled":
             return ReservationResponse(success=False, message="预定已取消，无法修改", data=None)
 
-        # 更新预定
-        db_reservation, message = update_reservation(db, reservation_code, reservation_update)
+        # 确定用户类型和ID
+        user_type = "admin" if current_admin else "user"
+        user_id = current_admin.username if current_admin else None
+
+        # 更新预定 - 传递reservation_number参数
+        db_reservation, message = update_reservation(
+            db,
+            reservation_code,
+            reservation_update,
+            user_type=user_type,
+            user_id=user_id,
+            reservation_number=reservation_number
+        )
 
         if not db_reservation:
             return ReservationResponse(success=False, message=message, data=None)
@@ -660,8 +687,8 @@ async def update_reservation_api(
                 "equipment_name": equipment.name if equipment else "",
                 "equipment_category": equipment.category if equipment else "",
                 "location": equipment.location if equipment else "",
-                "start_datetime": format_datetime(db_reservation.start_datetime),
-                "end_datetime": format_datetime(db_reservation.end_datetime),
+                "start_datetime": format_datetime(db_reservation.start_datetime, to_beijing=False),
+                "end_datetime": format_datetime(db_reservation.end_datetime, to_beijing=False),
                 "purpose": db_reservation.purpose,
                 "description": equipment.description,
                 # 二维码功能已移除
@@ -674,20 +701,167 @@ async def update_reservation_api(
                 "status": "已确认 / Confirmed"  # 补充状态字段，确保邮件模板能显示
             }
 
-            # 发送邮件
-            send_reservation_update(
-                to_email=reservation_update.user_email or reservation.user_email,
-                reservation_data=email_data,
-                lang=reservation_update.lang or "zh_CN"
-            )
+            # 直接使用await调用异步函数，并传递db参数
+            try:
+                await send_reservation_update(
+                    to_email=reservation_update.user_email or reservation.user_email,
+                    reservation_data=email_data,
+                    lang=reservation_update.lang or "zh_CN",
+                    db=db  # 添加db参数
+                )
+            except Exception as e:
+                logger.error(f"发送预定更新邮件失败: {str(e)}")
+
+        # 将 SQLAlchemy 模型对象转换为字典
+        reservation_dict = {
+            "id": db_reservation.id,
+            "equipment_id": db_reservation.equipment_id,
+            "user_name": db_reservation.user_name,
+            "user_contact": db_reservation.user_contact,
+            "user_department": db_reservation.user_department,
+            "user_email": db_reservation.user_email,
+            "start_datetime": db_reservation.start_datetime.isoformat() if db_reservation.start_datetime else None,
+            "end_datetime": db_reservation.end_datetime.isoformat() if db_reservation.end_datetime else None,
+            "status": db_reservation.status,
+            "purpose": db_reservation.purpose,
+            "reservation_code": db_reservation.reservation_code,
+            "reservation_number": db_reservation.reservation_number,
+            "equipment_name": db_reservation.equipment_name if hasattr(db_reservation, "equipment_name") else None,
+            "equipment_category": db_reservation.equipment_category if hasattr(db_reservation, "equipment_category") else None,
+            "equipment_location": db_reservation.equipment_location if hasattr(db_reservation, "equipment_location") else None,
+            "created_at": db_reservation.created_at.isoformat() if hasattr(db_reservation, "created_at") and db_reservation.created_at else None
+        }
 
         return ReservationResponse(
             success=True,
             message="预定已更新",
-            data=db_reservation
+            data=reservation_dict
         )
     except Exception as e:
         logger.error(f"更新预定出错: {str(e)}")
+        return ReservationResponse(
+            success=False,
+            message=f"更新预定出错: {str(e)}",
+            data=None
+        )
+
+@router.put("/number/{reservation_number}", response_model=ReservationResponse)
+async def update_reservation_by_number_api(
+    reservation_number: str,
+    reservation_update: ReservationUpdate,
+    db: Session = Depends(get_db),
+    current_admin = Depends(optional_admin)
+):
+    """
+    通过预约序号更新预定信息
+    Update reservation information by reservation number
+
+    Args:
+        reservation_number: 预约序号
+        reservation_update: 更新数据
+        db: 数据库会话
+        current_admin: 当前管理员
+    """
+    try:
+        # 记录API调用信息
+        logger.info(f"[通过预约序号更新预约API] 预约序号={reservation_number}")
+
+        # 直接通过预约序号查询预约
+        db_reservation = db.query(Reservation).filter(
+            Reservation.reservation_number == reservation_number
+        ).first()
+
+        if not db_reservation:
+            return ReservationResponse(success=False, message="预定不存在", data=None)
+
+        # 检查预定是否已取消
+        if db_reservation.status == "cancelled":
+            return ReservationResponse(success=False, message="预定已取消，无法修改", data=None)
+
+        # 确定用户类型和ID
+        user_type = "admin" if current_admin else "user"
+        user_id = current_admin.username if current_admin else None
+
+        # 更新预定 - 使用预约序号
+        updated_reservation, message = update_reservation(
+            db,
+            db_reservation.reservation_code,  # 传递预约码
+            reservation_update,
+            user_type=user_type,
+            user_id=user_id,
+            reservation_number=reservation_number  # 传递预约序号
+        )
+
+        if not updated_reservation:
+            return ReservationResponse(success=False, message=message, data=None)
+
+        # 获取设备信息
+        equipment = get_equipment(db, updated_reservation.equipment_id)
+        if equipment:
+            updated_reservation.equipment_name = equipment.name
+            updated_reservation.equipment_category = equipment.category
+            updated_reservation.equipment_location = equipment.location
+
+        # 准备邮件数据
+        if reservation_update.user_email or updated_reservation.user_email:
+            email_data = {
+                "reservation_code": updated_reservation.reservation_code,
+                "reservation_number": updated_reservation.reservation_number,
+                "user_name": updated_reservation.user_name,
+                "equipment_name": equipment.name if equipment else "",
+                "equipment_category": equipment.category if equipment else "",
+                "location": equipment.location if equipment else "",
+                "start_datetime": format_datetime(updated_reservation.start_datetime, to_beijing=False),
+                "end_datetime": format_datetime(updated_reservation.end_datetime, to_beijing=False),
+                "purpose": updated_reservation.purpose,
+                "description": equipment.description,
+                "site_url": "http://localhost:8000",
+                "changed": {
+                    "start_datetime": reservation_update.start_datetime is not None,
+                    "end_datetime": reservation_update.end_datetime is not None,
+                    "purpose": reservation_update.purpose is not None
+                },
+                "status": "已确认 / Confirmed"
+            }
+
+            # 发送更新邮件
+            try:
+                await send_reservation_update(
+                    to_email=reservation_update.user_email or updated_reservation.user_email,
+                    reservation_data=email_data,
+                    lang=reservation_update.lang or "zh_CN",
+                    db=db
+                )
+            except Exception as e:
+                logger.error(f"发送预定更新邮件失败: {str(e)}")
+
+        # 将 SQLAlchemy 模型对象转换为字典
+        reservation_dict = {
+            "id": updated_reservation.id,
+            "equipment_id": updated_reservation.equipment_id,
+            "user_name": updated_reservation.user_name,
+            "user_contact": updated_reservation.user_contact,
+            "user_department": updated_reservation.user_department,
+            "user_email": updated_reservation.user_email,
+            "start_datetime": updated_reservation.start_datetime.isoformat() if updated_reservation.start_datetime else None,
+            "end_datetime": updated_reservation.end_datetime.isoformat() if updated_reservation.end_datetime else None,
+            "status": updated_reservation.status,
+            "purpose": updated_reservation.purpose,
+            "reservation_code": updated_reservation.reservation_code,
+            "reservation_number": updated_reservation.reservation_number,
+            "equipment_name": updated_reservation.equipment_name if hasattr(updated_reservation, "equipment_name") else None,
+            "equipment_category": updated_reservation.equipment_category if hasattr(updated_reservation, "equipment_category") else None,
+            "equipment_location": updated_reservation.equipment_location if hasattr(updated_reservation, "equipment_location") else None,
+            "created_at": updated_reservation.created_at.isoformat() if hasattr(updated_reservation, "created_at") and updated_reservation.created_at else None
+        }
+
+        return ReservationResponse(
+            success=True,
+            message="预定已更新",
+            data=reservation_dict
+        )
+    except Exception as e:
+        logger.error(f"通过预约序号更新预定出错: {str(e)}")
         return ReservationResponse(
             success=False,
             message=f"更新预定出错: {str(e)}",
@@ -744,6 +918,10 @@ async def cancel_reservation_api(
                         elif isinstance(parsed_number, dict) and '$oid' in parsed_number:
                             reservation_number = parsed_number['$oid']
                             logger.info(f"[API参数] 从JSON对象中提取$oid: {reservation_number}")
+                        # 处理时间戳参数，如果JSON对象只包含_t字段，则忽略这个参数
+                        elif isinstance(parsed_number, dict) and '_t' in parsed_number and len(parsed_number) == 1:
+                            logger.info(f"[API参数] 检测到时间戳参数 _t，忽略此参数: {parsed_number}")
+                            reservation_number = None
                     except json.JSONDecodeError:
                         logger.error(f"[API参数] 无法解析JSON格式的预约序号: {reservation_number}")
             except Exception as e:
@@ -755,9 +933,11 @@ async def cancel_reservation_api(
             logger.warning(f"[API参数] 预约序号参数不存在，将取消所有具有相同预约码的预约")
 
         # 构建查询条件
-        query = db.query(Reservation).filter(Reservation.reservation_code == reservation_code)
+        query = db.query(Reservation)
         if reservation_number:
             query = query.filter(Reservation.reservation_number == reservation_number)
+        else:
+            query = query.filter(Reservation.reservation_code == reservation_code)
 
         # 获取预定信息（用于邮件发送）
         db_reservation = query.first()
@@ -778,8 +958,8 @@ async def cancel_reservation_api(
         # 记录取消前的状态
         logger.info(f"[API状态] 取消预约前状态: 预约码={reservation_code}, ID={db_reservation.id}, 预约序号={db_reservation.reservation_number}, 状态={db_reservation.status}")
 
-        # 取消预定
-        success, message = cancel_reservation(db, reservation_code, reservation_number)
+        # 使用新函数取消预约 - 通过预约码和预约序号
+        success, message = cancel_reservation_by_code(db, reservation_code, reservation_number)
         logger.info(f"[API结果] 取消预约结果: 成功={success}, 消息={message}")
 
         # 记录取消后的状态
@@ -804,8 +984,8 @@ async def cancel_reservation_api(
                 "equipment_name": equipment.name if equipment else "",
                 "equipment_category": equipment.category if equipment else "",
                 "location": equipment.location if equipment else "",
-                "start_datetime": format_datetime(db_reservation.start_datetime),
-                "end_datetime": format_datetime(db_reservation.end_datetime),
+                "start_datetime": format_datetime(db_reservation.start_datetime, to_beijing=False),
+                "end_datetime": format_datetime(db_reservation.end_datetime, to_beijing=False),
                 "purpose": db_reservation.purpose,
                 "description": equipment.description,
                 "site_url": "http://localhost:8000",  # 应该从配置中获取
@@ -826,8 +1006,8 @@ async def cancel_reservation_api(
                             "reservation_code": parent_recurring.reservation_code,
                             "equipment_name": equipment.name if equipment else "",
                             "pattern_type": parent_recurring.pattern_type,
-                            "start_datetime": format_datetime(parent_recurring.start_date),
-                            "end_datetime": format_datetime(parent_recurring.end_date),
+                            "start_datetime": format_datetime(parent_recurring.start_date, to_beijing=False),
+                            "end_datetime": format_datetime(parent_recurring.end_date, to_beijing=False),
                             "status": parent_recurring.status
                         }
                         logger.info(f"[API邮件] 找到父循环预约信息: ID={parent_recurring.id}, 预约码={parent_recurring.reservation_code}")
@@ -876,4 +1056,357 @@ async def cancel_reservation_api(
         logger.error(f"[API错误] 错误详情: {traceback.format_exc()}")
         return {"success": False, "message": f"取消预约时发生错误: {str(e)}"}
 
-        raise HTTPException(status_code=500, detail=f"获取预定二维码出错: {str(e)}")
+@router.get("/equipment/{equipment_id}/time-slots")
+def get_equipment_time_slots(
+    equipment_id: int,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    获取设备的时间段信息
+    Get time slots for equipment
+    """
+    # 解析日期
+    start_datetime = parse_datetime(start_date) if start_date else None
+    end_datetime = parse_datetime(end_date) if end_date else None
+
+    # 获取设备信息
+    equipment = db.query(Equipment).filter(Equipment.id == equipment_id).first()
+    if not equipment:
+        raise HTTPException(status_code=404, detail="设备不存在")
+
+    # 如果设备不允许同时预约，返回空列表
+    if not equipment.allow_simultaneous:
+        return {
+            "success": True,
+            "data": {
+                "equipment_id": equipment_id,
+                "equipment_name": equipment.name,
+                "allow_simultaneous": False,
+                "max_simultaneous": 1,
+                "time_slots": []
+            }
+        }
+
+    # 获取时间段信息
+    time_slots = get_time_slots_for_equipment(db, equipment_id, start_datetime, end_datetime)
+
+    return {
+        "success": True,
+        "data": {
+            "equipment_id": equipment_id,
+            "equipment_name": equipment.name,
+            "allow_simultaneous": True,
+            "max_simultaneous": equipment.max_simultaneous,
+            "time_slots": time_slots
+        }
+    }
+
+@router.get("/code/{reservation_code}/history")
+def get_reservation_history_api(
+    reservation_code: str,
+    reservation_number: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_admin = Depends(optional_admin)
+):
+    """
+    获取预定历史记录
+    Get reservation history
+
+    Args:
+        reservation_code: 预约码
+        reservation_number: 预约序号（可选），如果提供，则只获取指定预约序号的历史记录
+        db: 数据库会话
+        current_admin: 当前管理员
+    """
+    try:
+        # 获取预定信息
+        reservation = get_reservation_by_code(db, reservation_code, reservation_number)
+        if not reservation:
+            return {"success": False, "message": "预定不存在", "data": None}
+
+        # 构建查询条件
+        query = db.query(ReservationHistory).filter(
+            ReservationHistory.reservation_code == reservation_code
+        )
+
+        # 如果提供了预约序号，则添加预约序号过滤条件
+        if reservation_number:
+            query = query.filter(ReservationHistory.reservation_number == reservation_number)
+
+        # 执行查询
+        history_records = query.order_by(ReservationHistory.created_at.desc()).all()
+
+        # 转换为响应格式
+        history_data = []
+        for record in history_records:
+            history_data.append({
+                "id": record.id,
+                "user_type": record.user_type,
+                "user_id": record.user_id,
+                "action": record.action,
+                "field_name": record.field_name,
+                "old_value": record.old_value,
+                "new_value": record.new_value,
+                "created_at": record.created_at.isoformat() if record.created_at else None
+            })
+
+        return {
+            "success": True,
+            "message": "获取历史记录成功",
+            "data": history_data
+        }
+    except Exception as e:
+        logger.error(f"获取预定历史记录出错: {str(e)}")
+        return {
+            "success": False,
+            "message": f"获取预定历史记录出错: {str(e)}",
+            "data": None
+        }
+
+@router.options("/export")
+async def export_reservations_options():
+    """
+    处理导出端点的OPTIONS预检请求
+    Handle OPTIONS preflight request for export endpoint
+    """
+    from fastapi.responses import Response
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
+@router.post("/export")
+async def export_reservations(
+    export_request: ReservationExportRequest,
+    db: Session = Depends(get_db),
+    current_admin = Depends(optional_admin)  # 暂时使用optional_admin以便调试
+):
+    """
+    导出预定数据
+    Export reservation data
+    """
+    try:
+        from fastapi.responses import Response
+
+        logger.info(f"导出预定数据请求: {export_request}")
+
+        # 尝试导入导出函数
+        try:
+            from backend.utils.excel_handler import export_reservation_data
+            logger.info("成功导入导出函数")
+        except Exception as import_error:
+            logger.error(f"导入导出函数失败: {str(import_error)}")
+            raise HTTPException(status_code=500, detail=f"导入导出函数失败: {str(import_error)}")
+
+        # 根据导出范围获取数据
+        if export_request.export_scope == "all":
+            # 导出全部筛选结果
+            params = {
+                "equipment_id": export_request.equipment_id,
+                "user_name": export_request.user_name,
+                "status": export_request.status,
+                "from_date": export_request.from_date,
+                "to_date": export_request.to_date,
+                "category": export_request.category,
+                "reservation_code": export_request.reservation_code,
+                "skip": 0,
+                "limit": 10000,  # 设置一个较大的值以获取所有数据
+                "sort_by": "id",
+                "sort_order": "desc"
+            }
+
+            # 过滤None值
+            params = {k: v for k, v in params.items() if v is not None}
+
+            reservations = get_reservations(
+                db,
+                params.get("equipment_id"),
+                params.get("user_name"),
+                None,  # user_contact
+                params.get("status"),
+                params.get("from_date"),
+                params.get("to_date"),
+                params.get("category"),
+                params.get("reservation_code"),
+                params.get("skip", 0),
+                params.get("limit", 10000),
+                params.get("sort_by"),
+                params.get("sort_order")
+            )
+
+            # 转换为字典列表
+            reservation_list = []
+            for reservation in reservations:
+                # 获取设备信息
+                equipment = get_equipment(db, reservation.equipment_id)
+
+                reservation_dict = {
+                    "id": reservation.id,
+                    "reservation_number": reservation.reservation_number,
+                    "reservation_code": reservation.reservation_code,
+                    "equipment_name": equipment.name if equipment else None,
+                    "equipment_category": equipment.category if equipment else None,
+                    "equipment_location": equipment.location if equipment else None,
+                    "user_name": reservation.user_name,
+                    "user_department": reservation.user_department,
+                    "user_contact": reservation.user_contact,
+                    "user_email": reservation.user_email,
+                    "start_datetime": reservation.start_datetime,
+                    "end_datetime": reservation.end_datetime,
+                    "purpose": reservation.purpose,
+                    "status": reservation.status,
+                    "created_at": reservation.created_at
+                }
+                reservation_list.append(reservation_dict)
+        else:
+            # 导出当前页面数据
+            if not export_request.current_data:
+                raise HTTPException(status_code=400, detail="当前页面导出需要提供数据")
+
+            reservation_list = export_request.current_data
+
+        # 生成导出文件
+        logger.info(f"开始生成导出文件，数据条数: {len(reservation_list)}, 格式: {export_request.export_format}")
+        try:
+            file_bytes = export_reservation_data(
+                reservation_list,
+                export_request.selected_fields,
+                export_request.export_format
+            )
+            logger.info(f"导出文件生成成功，文件大小: {len(file_bytes)} 字节")
+        except Exception as export_error:
+            logger.error(f"生成导出文件失败: {str(export_error)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            raise HTTPException(status_code=500, detail=f"生成导出文件失败: {str(export_error)}")
+
+        # 设置文件名和Content-Type
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        if export_request.export_format.lower() == "csv":
+            filename = f"reservation_data_{timestamp}.csv"  # 使用英文文件名避免编码问题
+            content_type = "text/csv"
+        else:
+            filename = f"reservation_data_{timestamp}.xlsx"  # 使用英文文件名避免编码问题
+            content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+        # 返回文件
+        return Response(
+            content=file_bytes,
+            media_type=content_type,
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Type": content_type,
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        logger.error(f"导出预定数据出错: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"导出预定数据出错: {str(e)}")
+
+@router.get("/export/test")
+async def test_export_endpoint():
+    """
+    测试导出端点是否可访问
+    Test if export endpoint is accessible
+    """
+    return {"message": "导出端点测试成功", "status": "ok"}
+
+@router.get("/export/simple")
+async def simple_export_reservations(
+    format: str = "csv",
+    scope: str = "all",
+    fields: str = "all",
+    reservation_code: str = None,
+    user_name: str = None,
+    status: str = None,
+    from_date: str = None,
+    to_date: str = None,
+    db: Session = Depends(get_db),
+    current_admin = Depends(optional_admin)
+):
+    """
+    简化的导出端点（使用GET请求避免CORS问题）
+    Simplified export endpoint using GET request to avoid CORS issues
+    """
+    try:
+        from fastapi.responses import Response
+        from backend.utils.excel_handler import export_reservation_data_simple
+
+        logger.info(f"简化导出请求: format={format}, scope={scope}")
+
+        # 获取所有预约数据（简化版）
+        reservations = get_reservations(
+            db,
+            None,  # equipment_id
+            user_name,
+            None,  # user_contact
+            status,
+            None,  # from_date - 暂时不处理日期解析
+            None,  # to_date
+            None,  # category
+            reservation_code,
+            0,     # skip
+            1000,  # limit
+            "id",  # sort_by
+            "desc" # sort_order
+        )
+
+        # 转换为字典列表
+        reservation_list = []
+        for reservation in reservations:
+            # 获取设备信息
+            equipment = get_equipment(db, reservation.equipment_id)
+
+            reservation_dict = {
+                "id": reservation.id,
+                "reservation_number": reservation.reservation_number,
+                "reservation_code": reservation.reservation_code,
+                "equipment_name": equipment.name if equipment else None,
+                "equipment_category": equipment.category if equipment else None,
+                "equipment_location": equipment.location if equipment else None,
+                "user_name": reservation.user_name,
+                "user_department": reservation.user_department,
+                "user_contact": reservation.user_contact,
+                "user_email": reservation.user_email,
+                "start_datetime": reservation.start_datetime,
+                "end_datetime": reservation.end_datetime,
+                "purpose": reservation.purpose,
+                "status": reservation.status,
+                "created_at": reservation.created_at
+            }
+            reservation_list.append(reservation_dict)
+
+        # 生成CSV文件
+        file_bytes = export_reservation_data_simple(reservation_list)
+
+        # 设置文件名
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        filename = f"预约数据_{timestamp}.csv"
+
+        # 返回文件
+        return Response(
+            content=file_bytes,
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"简化导出失败: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")

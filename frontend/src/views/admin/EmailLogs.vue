@@ -40,7 +40,7 @@
     <el-pagination
       style="margin-top:10px;text-align:right"
       background
-      layout="prev, pager, next, jumper"
+      :layout="paginationLayout"
       :total="logTotal"
       :page-size="logPageSize"
       :current-page.sync="logPage"
@@ -72,11 +72,29 @@ export default {
         event_type: ''
       },
       logContentDialogVisible: false,
-      selectedLog: null
+      selectedLog: null,
+      // 响应式布局相关
+      isMobile: window.innerWidth <= 768
+    }
+  },
+
+  computed: {
+    // 根据屏幕宽度动态调整分页组件布局
+    paginationLayout() {
+      return this.isMobile
+        ? 'prev, next'
+        : 'prev, pager, next, jumper';
     }
   },
   created() {
     this.fetchLogs()
+    // 添加窗口大小变化的监听器
+    window.addEventListener('resize', this.handleResize)
+  },
+
+  beforeDestroy() {
+    // 移除窗口大小变化的监听器
+    window.removeEventListener('resize', this.handleResize)
   },
   methods: {
     async fetchLogs() {
@@ -109,7 +127,7 @@ export default {
         if (typeof val === 'string' && val.includes('T')) {
           dateTimeStr = val.replace('T', ' ').replace('Z', '');
         }
-        
+
         // 将日期时间字符串分割为组件
         const parts = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})(?::(\d{2}))?/.exec(dateTimeStr);
         if (parts) {
@@ -119,14 +137,14 @@ export default {
           const hour = parseInt(parts[4]);
           const minute = parseInt(parts[5]);
           const second = parts[6] ? parseInt(parts[6]) : 0;
-          
+
           // 直接使用提取的时间组件，避免时区转换
           return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
         }
       } catch (e) {
         console.error('解析日期失败:', e);
       }
-      
+
       // 如果解析失败，回退到简单方法
       const d = new Date(val);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -134,6 +152,11 @@ export default {
     showLogContent(log) {
       this.selectedLog = log;
       this.logContentDialogVisible = true;
+    },
+
+    // 处理窗口大小变化
+    handleResize() {
+      this.isMobile = window.innerWidth <= 768;
     }
   }
 }
@@ -143,4 +166,4 @@ export default {
 .email-logs {
   padding: 20px;
 }
-</style> 
+</style>

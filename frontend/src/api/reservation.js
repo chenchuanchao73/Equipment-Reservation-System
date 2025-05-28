@@ -6,7 +6,7 @@ import axios from 'axios'
 export default {
   // 创建预定
   createReservation(data) {
-    return axios.post('/api/reservation', data)
+    return axios.post('/api/reservation/', data)
   },
 
   // 获取预定列表（管理员）
@@ -116,5 +116,26 @@ export default {
   // 获取设备在指定日期的可用性
   getEquipmentAvailability(equipmentId, params) {
     return axios.get(`/api/equipment/${equipmentId}/availability`, { params })
+  },
+
+  // 获取预定历史记录
+  getReservationHistory(code, reservationNumber = null) {
+    // 添加时间戳参数，防止缓存
+    const timestamp = new Date().getTime()
+    let url = `/api/reservation/code/${code}/history?_t=${timestamp}`
+
+    // 如果提供了预约序号，添加到URL中
+    if (reservationNumber) {
+      url += `&reservation_number=${encodeURIComponent(reservationNumber)}`
+    }
+
+    return axios.get(url)
+  },
+
+  // 导出预定数据
+  exportReservations(exportData) {
+    return axios.post('/api/reservation/export', exportData, {
+      responseType: 'blob' // 重要：设置响应类型为blob以处理文件下载
+    })
   }
 }

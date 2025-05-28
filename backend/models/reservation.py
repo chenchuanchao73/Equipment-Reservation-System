@@ -2,9 +2,10 @@
 预定模型
 Reservation model
 """
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func, Boolean
-from backend.utils.db_utils import BeijingNow
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
+
+from backend.utils.db_utils import BeijingNow
 
 from backend.database import Base
 
@@ -33,9 +34,15 @@ class Reservation(Base):
     recurring_reservation_id = Column(Integer, ForeignKey("recurring_reservation.id"), nullable=True, comment="循环预约ID")
     is_exception = Column(Integer, default=0, comment="是否为循环预约的例外，0表示否，1表示是")
 
+    # 时间段关联
+    time_slot_id = Column(Integer, ForeignKey("equipment_time_slots.id"), nullable=True, comment="关联的设备时间段ID")
+
     # 关系
     equipment = relationship("Equipment", back_populates="reservations")
     recurring_reservation = relationship("RecurringReservation", back_populates="reservations")
+    time_slot = relationship("EquipmentTimeSlot", back_populates="reservations")
+    # 使用字符串引用，避免循环引用问题
+    history = relationship("ReservationHistory", back_populates="reservation", cascade="all, delete-orphan", lazy="dynamic")
 
     def __repr__(self):
         return f"<Reservation {self.reservation_number}>"

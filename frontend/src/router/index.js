@@ -29,7 +29,7 @@ const routes = [
     path: '/',
     name: 'home',
     component: Home,
-    meta: { title: '首页' }
+    meta: { title: 'nav.home' }
   },
   {
     path: '/calendar',
@@ -41,49 +41,49 @@ const routes = [
     path: '/equipment',
     name: 'equipment-list',
     component: EquipmentList,
-    meta: { title: '设备列表' }
+    meta: { title: 'equipment.list' }
   },
   {
     path: '/equipment/:id',
     name: 'equipment-detail',
     component: EquipmentDetail,
-    meta: { title: '设备详情' }
+    meta: { title: 'equipment.detail' }
   },
   {
     path: '/equipment/:id/reserve',
     name: 'reservation-form',
     component: ReservationForm,
-    meta: { title: '预定设备' }
+    meta: { title: 'reservation.form' }
   },
   {
     path: '/equipment/:id/recurring-reserve',
     name: 'recurring-reservation-form',
     component: RecurringReservationForm,
-    meta: { title: '循环预约设备' }
+    meta: { title: 'reservation.recurringForm' }
   },
   {
     path: '/reservation/query',
     name: 'reservation-query',
     component: ReservationQuery,
-    meta: { title: '查询预定' }
+    meta: { title: 'reservation.query' }
   },
   {
     path: '/reservation/number/:number',
     name: 'reservation-detail-by-number',
     component: ReservationDetail,
-    meta: { title: '预定详情' }
+    meta: { title: 'reservation.detail' }
   },
   {
     path: '/reservation/:code',
     name: 'reservation-detail',
     component: ReservationDetail,
-    meta: { title: '预定详情' }
+    meta: { title: 'reservation.detail' }
   },
   {
     path: '/recurring-reservation/:id',
     name: 'recurring-reservation-detail',
     component: RecurringReservationDetail,
-    meta: { title: '循环预约详情' },
+    meta: { title: 'reservation.recurringDetail' },
     // 添加props选项，确保组件能够接收到路由参数
     props: true
   },
@@ -91,12 +91,12 @@ const routes = [
     path: '/admin/login',
     name: 'admin-login',
     component: AdminLogin,
-    meta: { title: '管理员登录' }
+    meta: { title: 'admin.login' }
   },
   {
     path: '/admin',
     component: () => import('@/views/admin/AdminLayout.vue'),
-    meta: { title: '管理控制台', requiresAuth: true },
+    meta: { title: 'admin.dashboard', requiresAuth: true },
     children: [
       {
         path: '',
@@ -133,10 +133,10 @@ const routes = [
         meta: { title: '预定详情', requiresAuth: true }
       },
       {
-        path: 'settings',
-        name: 'admin-settings',
-        component: AdminSettings,
-        meta: { title: '系统管理', requiresAuth: true }
+        path: 'accounts',
+        name: 'admin-accounts',
+        component: () => import('@/views/admin/AdminAccounts.vue'),
+        meta: { title: '账号管理', requiresAuth: true }
       },
       {
         path: 'announcement',
@@ -179,6 +179,12 @@ const routes = [
         name: 'admin-db-viewer',
         component: () => import('@/views/admin/DatabaseViewer.vue'),
         meta: { title: '数据库表查看', requiresAuth: true }
+      },
+      {
+        path: 'system-logs',
+        name: 'admin-system-logs',
+        component: () => import('@/views/admin/SystemLogs.vue'),
+        meta: { title: '系统日志', requiresAuth: true }
       }
     ]
   },
@@ -186,7 +192,7 @@ const routes = [
     path: '*',
     name: 'not-found',
     component: NotFound,
-    meta: { title: '页面未找到' }
+    meta: { title: 'error.notFound' }
   }
 ]
 

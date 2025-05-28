@@ -30,6 +30,7 @@ from config import TEMPLATES_DIR, STATIC_DIR, APP_NAME, DEFAULT_LANGUAGE
 from backend.database import init_db, get_db
 from backend.i18n import setup_i18n, get_locale, I18nMiddleware
 from backend.utils.status_updater import update_reservation_statuses
+from backend.utils.duplicate_checker import check_and_fix_duplicate_numbers
 
 # 设置新的日志系统
 logger, log_handler = setup_logging()
@@ -42,7 +43,7 @@ async def status_update_task():
     while True:
         # 先检查日志文件是否存在
         check_log_file()
-        
+
         logger.info("执行预约状态更新任务")
         db = None
         try:
@@ -69,24 +70,54 @@ async def log_maintenance_task():
         while True:
             # 每小时执行一次
             await asyncio.sleep(3600)  # 3600秒 = 1小时
-            
+
             logger.info("执行日志维护任务")
-            
+
             # 检查日志文件
             check_log_file()
-            
+
             # 备份日志
             backup_logs()
-            
+
             # 每天午夜左右（0:30）强制执行一次日志轮转，确保日志按天分割
             current_hour = datetime.now().hour
             current_minute = datetime.now().minute
             if current_hour == 0 and current_minute >= 30 and current_minute < 35:
                 logger.info("执行每日日志轮转")
                 force_log_rotation()
-            
+
     except Exception as e:
         logger.error(f"日志维护任务异常: {e}", exc_info=True)
+
+# 定期检查重复预约序号任务
+async def duplicate_check_task():
+    """定期检查重复预约序号的后台任务"""
+    try:
+        while True:
+            # 每1小时执行一次
+            await asyncio.sleep(3600)  # 3600秒 = 1小时
+
+            logger.info("执行预约序号重复检查任务")
+            db = None
+            try:
+                # 获取数据库会话
+                db = next(get_db())
+                # 检查并修复重复的预约序号
+                fixed_count = check_and_fix_duplicate_numbers(db)
+                if fixed_count > 0:
+                    logger.info(f"成功修复 {fixed_count} 个重复的预约序号")
+                else:
+                    logger.info("没有发现重复的预约序号")
+            except Exception as e:
+                logger.error(f"检查重复预约序号时出错: {str(e)}", exc_info=True)
+                # 发生错误时尝试备份日志
+                backup_logs()
+            finally:
+                # 确保数据库连接被关闭
+                if db:
+                    db.close()
+    except Exception as e:
+        logger.error(f"预约序号重复检查任务异常: {e}", exc_info=True)
 
 # 定义生命周期管理器
 @asynccontextmanager
@@ -97,10 +128,13 @@ async def lifespan(app: FastAPI):
 
     # 启动状态更新后台任务
     status_task = asyncio.create_task(status_update_task())
-    
+
     # 启动日志维护任务
     log_task = asyncio.create_task(log_maintenance_task())
-    
+
+    # 启动预约序号重复检查任务
+    duplicate_task = asyncio.create_task(duplicate_check_task())
+
     logger.info("后台任务已启动")
 
     yield
@@ -108,16 +142,18 @@ async def lifespan(app: FastAPI):
     # 关闭时执行
     status_task.cancel()
     log_task.cancel()
+    duplicate_task.cancel()
     try:
         await status_task
         await log_task
+        await duplicate_task
     except asyncio.CancelledError:
         logger.info("后台任务已取消")
 
     # 关闭日志处理器
     for handler in logger.handlers:
         handler.close()
-        
+
     logger.info("应用关闭 / Application shut down")
 
 # 创建FastAPI应用
@@ -137,6 +173,10 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"]
 )
+
+# 添加日志中间件
+from backend.middlewares.log_middleware import LogMiddleware
+app.add_middleware(LogMiddleware)
 
 # 自定义JSON响应处理
 @app.middleware("http")
@@ -168,6 +208,7 @@ from backend.routes.upload import router as upload_router
 from backend.routes.calendar import router as calendar_router
 from backend.routes.db_admin import router as db_admin_router  # 导入数据库表查看路由
 from backend.routes.announcements import router as announcements_router
+from backend.routes.system_logs import router as system_logs_router  # 导入系统日志路由
 
 # 注册路由
 app.include_router(equipment_router)
@@ -180,6 +221,7 @@ app.include_router(upload_router)
 app.include_router(calendar_router)
 app.include_router(db_admin_router)  # 注册数据库表查看路由
 app.include_router(announcements_router)
+app.include_router(system_logs_router)  # 注册系统日志路由
 
 @app.get("/")
 def root(request: Request):

@@ -4,6 +4,46 @@ import axios from 'axios'
 
 Vue.use(Vuex)
 
+// 系统支持的语言列表
+const SUPPORTED_LANGUAGES = ['zh-CN', 'en']
+
+// 检测浏览器语言并匹配系统支持的语言
+const detectBrowserLanguage = () => {
+  // 获取浏览器语言
+  let browserLang = navigator.language || navigator.userLanguage || 'zh-CN'
+  console.log('Detected browser language:', browserLang)
+
+  // 将浏览器语言转换为系统支持的语言格式
+  // 例如：zh-CN, zh, en-US, en 等
+  browserLang = browserLang.toLowerCase()
+
+  // 精确匹配
+  if (SUPPORTED_LANGUAGES.includes(browserLang)) {
+    console.log('Exact language match found:', browserLang)
+    return browserLang
+  }
+
+  // 部分匹配（例如：zh-TW -> zh-CN, en-GB -> en）
+  const langPrefix = browserLang.split('-')[0]
+  for (const lang of SUPPORTED_LANGUAGES) {
+    if (lang.toLowerCase().startsWith(langPrefix)) {
+      console.log('Partial language match found:', browserLang, '->', lang)
+      return lang
+    }
+  }
+
+  // 如果没有匹配，检查localStorage中是否有保存的语言设置
+  const savedLanguage = localStorage.getItem('language')
+  if (savedLanguage && SUPPORTED_LANGUAGES.includes(savedLanguage)) {
+    console.log('Using saved language preference:', savedLanguage)
+    return savedLanguage
+  }
+
+  // 默认返回中文
+  console.log('No language match found, using default:', 'zh-CN')
+  return 'zh-CN'
+}
+
 export default new Vuex.Store({
   state: {
     // 用户状态
@@ -26,7 +66,10 @@ export default new Vuex.Store({
     loading: false,
 
     // 语言设置
-    language: localStorage.getItem('language') || 'zh-CN'
+    language: detectBrowserLanguage(),
+
+    // 主题设置
+    darkMode: localStorage.getItem('darkMode') === 'true' || false
   },
 
   getters: {
@@ -52,7 +95,10 @@ export default new Vuex.Store({
     isLoading: state => state.loading,
 
     // 语言设置
-    getLanguage: state => state.language
+    getLanguage: state => state.language,
+
+    // 主题设置
+    isDarkMode: state => state.darkMode
   },
 
   mutations: {
@@ -97,6 +143,11 @@ export default new Vuex.Store({
     SET_LANGUAGE(state, language) {
       state.language = language
       localStorage.setItem('language', language)
+    },
+
+    // 主题设置
+    SET_DARK_MODE(state, darkMode) {
+      state.darkMode = darkMode
     }
   },
 
@@ -279,7 +330,16 @@ export default new Vuex.Store({
 
     // 设置语言
     setLanguage({ commit }, language) {
+      console.log('Setting language to:', language)
       commit('SET_LANGUAGE', language)
+    },
+
+    // 切换暗色/亮色主题
+    toggleDarkMode({ commit, state }) {
+      const newDarkMode = !state.darkMode
+      commit('SET_DARK_MODE', newDarkMode)
+      localStorage.setItem('darkMode', newDarkMode)
+      return newDarkMode
     }
   },
 

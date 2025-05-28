@@ -13,7 +13,7 @@ from backend.models.recurring_reservation import RecurringReservation
 from backend.models.reservation import Reservation
 from backend.models.equipment import Equipment
 from backend.schemas.recurring_reservation import RecurringReservationCreate, RecurringReservationUpdate
-from backend.utils.code_generator import generate_reservation_code, generate_reservation_number
+from backend.utils.code_generator import generate_reservation_code, generate_reservation_number, generate_recurring_reservation_number
 from backend.utils.date_utils import combine_date_time, get_weekday, get_next_occurrence_date
 from backend.routes.crud.reservation import is_time_available
 
@@ -89,109 +89,172 @@ def create_recurring_reservation(db: Session, recurring_reservation: RecurringRe
 
 def generate_child_reservations(db: Session, recurring_reservation: RecurringReservation) -> List[Reservation]:
     """
-    生成循环预约的子预约
+    为循环预约生成子预约
     Generate child reservations for recurring reservation
     """
-    child_reservations = []
-    current_date = recurring_reservation.start_date
-    end_date = recurring_reservation.end_date
+    try:
+        # 解析必要的数据
+        equipment_id = recurring_reservation.equipment_id
+        pattern_type = recurring_reservation.pattern_type
+        start_date = recurring_reservation.start_date
+        end_date = recurring_reservation.end_date
+        start_time = recurring_reservation.start_time
+        end_time = recurring_reservation.end_time
 
-    # 解析JSON字段
-    days_of_week = json.loads(recurring_reservation.days_of_week) if recurring_reservation.days_of_week else []
-    days_of_month = json.loads(recurring_reservation.days_of_month) if recurring_reservation.days_of_month else []
-
-    index = 1  # 新增：预约序号计数器
-
-    while current_date <= end_date:
-        should_create = False
-
-        if recurring_reservation.pattern_type == "daily":
-            should_create = True
-        elif recurring_reservation.pattern_type == "weekly":
-            # 检查当前日期是否是指定的星期几
-            weekday = get_weekday(current_date)  # 0-6, 0表示周日
-            should_create = weekday in days_of_week
-        elif recurring_reservation.pattern_type == "monthly":
-            # 检查当前日期是否是指定的月份日期
-            day = current_date.day
-            should_create = day in days_of_month
-        elif recurring_reservation.pattern_type == "custom":
-            # 自定义模式的处理逻辑
-            pass
-
-        if should_create:
-            # 创建预约的开始和结束时间
+        # 解析days_of_week和days_of_month
+        days_of_week = []
+        if recurring_reservation.days_of_week:
             try:
-                # 直接使用datetime构造函数创建日期时间对象
-                start_time = recurring_reservation.start_time
-                end_time = recurring_reservation.end_time
+                if isinstance(recurring_reservation.days_of_week, str):
+                    days_of_week = json.loads(recurring_reservation.days_of_week)
+                else:
+                    days_of_week = recurring_reservation.days_of_week
+            except (json.JSONDecodeError, TypeError):
+                logger.error(f"无法解析days_of_week: {recurring_reservation.days_of_week}")
 
-                # 创建开始日期时间
-                start_datetime = datetime(
-                    year=current_date.year,
-                    month=current_date.month,
-                    day=current_date.day,
-                    hour=start_time.hour,
-                    minute=start_time.minute,
-                    second=start_time.second
+        days_of_month = []
+        if recurring_reservation.days_of_month:
+            try:
+                if isinstance(recurring_reservation.days_of_month, str):
+                    days_of_month = json.loads(recurring_reservation.days_of_month)
+                else:
+                    days_of_month = recurring_reservation.days_of_month
+            except (json.JSONDecodeError, TypeError):
+                logger.error(f"无法解析days_of_month: {recurring_reservation.days_of_month}")
+
+        # 准备循环生成子预约
+        child_reservations = []
+        current_date = start_date
+
+        # 冲突信息收集
+        conflicts = []
+        total_planned = 0
+        created_count = 0
+
+        # 添加一个基础编号变量，用于生成关联的预约号
+        base_number = None
+        # 添加子预约序号计数
+        reservation_index = 1
+
+        while current_date <= end_date:
+            should_create = False
+
+            if pattern_type == "daily":
+                should_create = True
+            elif pattern_type == "weekly":
+                # 检查当前日期是否是指定的星期几
+                weekday = get_weekday(current_date)  # 0-6, 0表示周日
+                should_create = weekday in days_of_week
+            elif pattern_type == "monthly":
+                # 检查当前日期是否是指定的月份日期
+                day = current_date.day
+                should_create = day in days_of_month
+            elif pattern_type == "custom":
+                # 自定义模式的处理逻辑
+                pass
+
+            if should_create:
+                total_planned += 1  # 计划创建的预约总数
+
+                # 创建预约的开始和结束时间
+                try:
+                    # 直接使用datetime构造函数创建日期时间对象
+                    start_time = recurring_reservation.start_time
+                    end_time = recurring_reservation.end_time
+
+                    # 创建开始日期时间
+                    start_datetime = datetime(
+                        year=current_date.year,
+                        month=current_date.month,
+                        day=current_date.day,
+                        hour=start_time.hour,
+                        minute=start_time.minute,
+                        second=start_time.second
+                    )
+
+                    # 创建结束日期时间
+                    end_datetime = datetime(
+                        year=current_date.year,
+                        month=current_date.month,
+                        day=current_date.day,
+                        hour=end_time.hour,
+                        minute=end_time.minute,
+                        second=end_time.second
+                    )
+
+                    # 打印调试信息
+                    print(f"成功创建日期时间 - 开始: {start_datetime}, 结束: {end_datetime}")
+
+                except Exception as e:
+                    print(f"创建日期时间对象失败: {e}")
+                    conflicts.append(current_date.strftime('%Y-%m-%d'))  # 记录失败的日期
+                    current_date += timedelta(days=1)  # 增加一天
+                    continue
+
+                # 检查该时间段是否可用
+                reservation_date = current_date.strftime('%Y-%m-%d')
+                is_available = is_time_available(db, equipment_id, start_datetime, end_datetime)
+
+                if not is_available:
+                    print(f"日期 {reservation_date} 的时间段不可用")
+                    conflicts.append(reservation_date)  # 记录冲突的日期
+                    current_date += timedelta(days=1)  # 增加一天
+                    continue
+
+                # 创建预约 - 使用父循环预约的预约码，而不是生成新的
+                reservation_code = recurring_reservation.reservation_code  # 直接使用父循环预约的预约码
+
+                # 生成预约序号 - 使用循环预约专用的序号生成函数
+                reservation_number, base_number = generate_recurring_reservation_number(
+                    current_date,
+                    reservation_index,
+                    base_number,
+                    db  # 传入数据库会话，用于检查编号唯一性
                 )
 
-                # 创建结束日期时间
-                end_datetime = datetime(
-                    year=current_date.year,
-                    month=current_date.month,
-                    day=current_date.day,
-                    hour=end_time.hour,
-                    minute=end_time.minute,
-                    second=end_time.second
-                )
+                # 递增子预约序号
+                reservation_index += 1
 
-                # 打印调试信息
-                print(f"成功创建日期时间 - 开始: {start_datetime}, 结束: {end_datetime}")
-
-            except Exception as e:
-                print(f"创建日期时间对象失败: {e}")
-                continue
-
-            # 检查是否与现有预约冲突
-            # 暂时跳过时间冲突检查，直接创建预约
-            if True:  # 临时解决方案，跳过时间冲突检查
-                # 为每个子预约生成唯一的预约序号
-                reservation_number = generate_reservation_number(current_date, index)
-                while db.query(Reservation).filter(Reservation.reservation_number == reservation_number).first():
-                    index += 1
-                    reservation_number = generate_reservation_number(current_date, index)
-
-                # 创建预约
-                db_reservation = Reservation(
-                    equipment_id=recurring_reservation.equipment_id,
-                    reservation_code=recurring_reservation.reservation_code,  # 使用循环预约的预定码
-                    reservation_number=reservation_number,  # 添加唯一预约序号
+                # 创建子预约
+                child_reservation = Reservation(
+                    recurring_reservation_id=recurring_reservation.id,
+                    equipment_id=equipment_id,
+                    reservation_code=reservation_code,
+                    reservation_number=reservation_number,
+                    start_datetime=start_datetime,
+                    end_datetime=end_datetime,
                     user_name=recurring_reservation.user_name,
                     user_department=recurring_reservation.user_department,
                     user_contact=recurring_reservation.user_contact,
                     user_email=recurring_reservation.user_email,
-                    start_datetime=start_datetime,
-                    end_datetime=end_datetime,
                     purpose=recurring_reservation.purpose,
-                    status="confirmed",
-                    recurring_reservation_id=recurring_reservation.id,
+                    status='confirmed',
                     is_exception=0
                 )
 
-                db.add(db_reservation)
-                child_reservations.append(db_reservation)
+                db.add(child_reservation)
+                child_reservations.append(child_reservation)
+                created_count += 1  # 实际创建的预约数
 
-            index += 1  # 新增：每生成一个预约，序号加1
+            current_date += timedelta(days=1)  # 增加一天
 
-        # 移动到下一天
-        current_date += timedelta(days=1)
+        # 记录冲突信息
+        if conflicts:
+            recurring_reservation.conflicts = ','.join(conflicts)
 
-    db.commit()
-    for reservation in child_reservations:
-        db.refresh(reservation)
+        # 更新总计划数和实际创建数
+        recurring_reservation.total_planned = total_planned
+        recurring_reservation.created_count = created_count
 
-    return child_reservations
+        # 提交更改
+        db.commit()
+
+        return child_reservations
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"生成子预约失败: {str(e)}")
+        raise
 
 def get_recurring_reservation(db: Session, recurring_reservation_id: int) -> Optional[RecurringReservation]:
     """

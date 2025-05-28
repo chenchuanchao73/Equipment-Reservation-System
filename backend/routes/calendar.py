@@ -78,7 +78,9 @@ async def get_calendar_reservations(
                     "reservationCode": res.reservation_code,
                     "reservationNumber": res.reservation_number,
                     "isRecurring": is_recurring,
-                    "recurringReservationId": res.recurring_reservation_id
+                    "recurringReservationId": res.recurring_reservation_id,
+                    "purpose": res.purpose,
+                    "userEmail": res.user_email
                 }
             })
 

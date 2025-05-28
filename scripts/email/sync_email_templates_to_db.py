@@ -70,6 +70,25 @@ Dear {{ reservation.user_name }}, your recurring equipment reservation has been 
 <tr><th>设备描述 / Equipment Description</th><td>{{ reservation.description }}</td></tr>
 {% endif %}
 </table>
+
+{% if reservation.has_conflicts %}
+<div style="margin-top: 20px; padding: 10px; border: 1px solid #f0ad4e; background-color: #fcf8e3; border-radius: 4px;">
+    <h3 style="color: #8a6d3b;">注意：部分日期因时间冲突已跳过 / Note: Some dates were skipped due to time conflicts</h3>
+    <p>计划创建的预约总数 / Total planned reservations: {{ reservation.total_planned }}</p>
+    <p>实际创建的预约数量 / Actually created reservations: {{ reservation.created_count }}</p>
+    <p>因时间冲突跳过的预约数量 / Skipped reservations due to conflicts: {{ reservation.skipped_count }}</p>
+
+    {% if reservation.conflict_dates and reservation.conflict_dates|length > 0 %}
+    <p><strong>冲突日期 / Conflict dates:</strong></p>
+    <ul>
+        {% for date in reservation.conflict_dates %}
+        <li>{{ date }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endif %}
+
 <p>如有任何问题，请联系管理员。<br>
 If you have any questions, please contact the administrator.</p>
 </body></html>
@@ -139,10 +158,33 @@ All child reservations under this recurring reservation have been cancelled. If 
 </body></html>
 '''
 
+# 新增：预约更新邮件模板
+reservation_updated_html = '''
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>预约信息已更新 / Reservation Updated</title></head><body>
+<h2>预约信息已更新 / Reservation Updated</h2>
+<p>尊敬的 {{ reservation.user_name }}，您的设备预约信息已更新。<br>
+Dear {{ reservation.user_name }}, your equipment reservation has been updated.</p>
+<table border=1 cellpadding=6>
+    <tr><th>预约编号 / Reservation Code</th><td>{{ reservation.reservation_code }}</td></tr>
+    <tr><th>设备名称 / Equipment Name</th><td>{{ reservation.equipment_name }}</td></tr>
+    <tr><th>开始时间 / Start Time</th><td>{{ reservation.start_datetime }}</td></tr>
+    <tr><th>结束时间 / End Time</th><td>{{ reservation.end_datetime }}</td></tr>
+    <tr><th>状态 / Status</th><td>{{ reservation.status }}</td></tr>
+    {% if reservation.purpose %}
+    <tr><th>使用目的 / Purpose</th><td>{{ reservation.purpose }}</td></tr>
+    {% endif %}
+</table>
+<p>如有任何问题，请联系管理员。<br>If you have any questions, please contact the administrator.</p>
+</body></html>
+'''
+
 upsert_template('reservation_single_created', '单次预约创建', '单次预约创建成功 / Single Reservation Created', single_created_html)
 upsert_template('reservation_recurring_created', '循环预约创建', '循环预约创建成功 / Recurring Reservation Created', recurring_created_html)
 upsert_template('reservation_single_cancelled', '单次预约取消', '单次预约取消 / Single Reservation Cancelled', single_cancelled_html)
 upsert_template('reservation_recurring_cancelled', '循环预约子预约取消', '循环预约子预约取消 / Recurring Child Reservation Cancelled', recurring_cancelled_html)
 upsert_template('reservation_recurring_all_cancelled', '循环预约取消', '循环预约已取消 / Recurring Reservation Cancelled', recurring_all_cancelled_html)
+# 新增：预约更新邮件模板
+upsert_template('reservation_updated', '预约更新', '预约信息已更新 / Reservation Updated', reservation_updated_html)
 
 print('邮件模板已同步到数据库！')

@@ -17,6 +17,8 @@ class EquipmentBase(BaseModel):
     image_path: Optional[str] = Field(None, title="设备图片路径", max_length=255)
     user_guide: Optional[str] = Field(None, title="设备使用指南")
     video_tutorial: Optional[str] = Field(None, title="视频教程链接", max_length=255)
+    allow_simultaneous: Optional[bool] = Field(False, title="是否允许同时预定")
+    max_simultaneous: Optional[int] = Field(1, title="最大同时预定数量")
 
 # 创建设备请求
 class EquipmentCreate(EquipmentBase):
@@ -33,6 +35,8 @@ class EquipmentUpdate(BaseModel):
     image_path: Optional[str] = Field(None, title="设备图片路径", max_length=255)
     user_guide: Optional[str] = Field(None, title="设备使用指南")
     video_tutorial: Optional[str] = Field(None, title="视频教程链接", max_length=255)
+    allow_simultaneous: Optional[bool] = Field(None, title="是否允许同时预定")
+    max_simultaneous: Optional[int] = Field(None, title="最大同时预定数量")
 
 # 设备响应
 class Equipment(EquipmentBase):
@@ -59,3 +63,6 @@ class EquipmentAvailability(BaseModel):
     equipment_id: int
     dates: List[datetime]
     available: List[bool]
+    allow_simultaneous: Optional[bool] = False
+    max_simultaneous: Optional[int] = 1
+    reservation_counts: Optional[List[int]] = None

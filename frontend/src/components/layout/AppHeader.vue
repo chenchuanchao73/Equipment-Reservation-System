@@ -17,6 +17,10 @@
           <i class="el-icon-s-home"></i>
           <span>{{ $t('nav.home') }}</span>
         </el-menu-item>
+        <el-menu-item index="/calendar">
+          <i class="el-icon-date"></i>
+          <span>{{ $t('nav.calendar') }}</span>
+        </el-menu-item>
         <el-menu-item index="/equipment">
           <i class="el-icon-s-grid"></i>
           <span>{{ $t('nav.equipment') }}</span>
@@ -25,12 +29,11 @@
           <i class="el-icon-s-order"></i>
           <span>{{ $t('nav.reservation') }}</span>
         </el-menu-item>
-        <el-menu-item index="/calendar">
-          <i class="el-icon-date"></i>
-          <span>{{ $t('nav.calendar') }}</span>
-        </el-menu-item>
 
         <div class="right-menu">
+          <!-- 添加主题切换按钮 -->
+          <theme-switch class="theme-switch-container" />
+
           <div class="language-switcher">
             <button
               class="lang-btn"
@@ -81,12 +84,15 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import MobileNav from './MobileNav.vue'
+import ThemeSwitch from '@/components/common/ThemeSwitch.vue'
+import { updatePageTitle } from '@/router/permission'
 
 export default {
   name: 'AppHeader',
 
   components: {
-    MobileNav
+    MobileNav,
+    ThemeSwitch
   },
 
   computed: {
@@ -115,6 +121,11 @@ export default {
     handleLanguageChange(lang) {
       this.setLanguage(lang)
       this.$i18n.locale = lang
+
+      // 更新页面标题
+      setTimeout(() => {
+        updatePageTitle()
+      }, 0)
     }
   }
 }
@@ -202,6 +213,10 @@ export default {
 .login-button {
   color: #606266;
   margin-left: 10px;
+}
+
+.theme-switch-container {
+  margin-right: 15px;
 }
 
 @media (max-width: 768px) {

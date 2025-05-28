@@ -55,3 +55,14 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str
+
+# 修改密码请求
+class ChangePasswordRequest(BaseModel):
+    old_password: str = Field(..., title="当前密码")
+    new_password: str = Field(..., title="新密码")
+
+    @validator('new_password')
+    def validate_new_password(cls, v):
+        if len(v) < 6:
+            raise ValueError('密码长度不能小于6个字符')
+        return v

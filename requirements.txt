@@ -12,10 +12,6 @@ aiofiles==23.1.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
-# 二维码生成
-qrcode==7.4.2
-pillow==9.5.0
-
 # HTTP客户端
 requests==2.28.2
 
@@ -28,4 +24,8 @@ aiosmtplib==2.0.1
 # 日志处理
 concurrent-log-handler==0.9.20
 pywin32==310; platform_system=="Windows"  # Windows平台上的依赖
-concurrent-log-handler>=0.9.20 
+concurrent-log-handler>=0.9.20
+
+# Excel处理
+pandas==2.0.1
+openpyxl==3.1.2

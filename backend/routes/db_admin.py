@@ -1,10 +1,11 @@
+import sqlite3
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.routes.auth import get_current_admin
 from backend.utils.date_utils import convert_to_beijing_time
-from datetime import datetime
+from datetime import datetime, date, time
 
 router = APIRouter(
     prefix="/api/db",
@@ -55,6 +56,10 @@ async def get_table_rows(
         count_result = db.execute(count_sql).fetchone()
         total = count_result[0]
 
+        # 获取表的列信息，用于判断列类型
+        columns_info = inspector.get_columns(table_name)
+        column_types = {col['name']: col['type'] for col in columns_info}
+
         # 使用双引号包裹表名，避免 SQLite 关键字冲突
         sql = text(f'SELECT * FROM "{table_name}" LIMIT :limit OFFSET :skip')
         result = db.execute(sql, {"limit": limit, "skip": skip})
@@ -68,12 +73,43 @@ async def get_table_rows(
             for idx, column_name in enumerate(column_names):
                 value = row[idx]
 
-                # 对日期时间字段进行转换
+                # 特殊处理各种日期时间类型
                 if isinstance(value, datetime):
-                    # 转换为北京时间
-                    value = convert_to_beijing_time(value)
-                    # 格式化为字符串
-                    value = value.strftime("%Y-%m-%d %H:%M:%S")
+                    # 对于更新时间字段，直接显示数据库中的值，不做时区转换
+                    # 因为数据库中已经存储了北京时间
+                    if column_name in ['updated_at', 'created_at']:
+                        value = value.strftime("%Y-%m-%d %H:%M:%S")
+                    # 对于预约的开始和结束时间，也不做时区转换
+                    elif column_name in ['start_datetime', 'end_datetime']:
+                        value = value.strftime("%Y-%m-%d %H:%M:%S")
+                    else:
+                        # 其他datetime字段，保持原样
+                        value = value.strftime("%Y-%m-%d %H:%M:%S")
+                # 特殊处理日期类型
+                elif isinstance(value, date) and not isinstance(value, datetime):
+                    # 日期类型，只显示日期部分
+                    value = value.strftime("%Y-%m-%d")
+                # 特殊处理时间类型
+                elif isinstance(value, time):
+                    # 时间类型，只显示时间部分，不显示微秒
+                    value = value.strftime("%H:%M:%S")
+                # 处理SQLite的日期时间文本格式
+                elif isinstance(value, str):
+                    # 尝试检测日期时间字符串
+                    if table_name == 'recurring_reservation' and column_name in ['start_date', 'end_date']:
+                        try:
+                            # 如果是日期字符串，只保留日期部分
+                            dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                            value = dt.strftime("%Y-%m-%d")
+                        except:
+                            pass
+                    elif table_name == 'recurring_reservation' and column_name in ['start_time', 'end_time']:
+                        try:
+                            # 如果是时间字符串，只保留时间部分，去掉微秒
+                            if ' ' in value:  # 格式如 "09:00:00 000000"
+                                value = value.split(' ')[0]
+                        except:
+                            pass
 
                 row_dict[column_name] = value
             rows.append(row_dict)

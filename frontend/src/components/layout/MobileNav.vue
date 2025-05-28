@@ -25,6 +25,11 @@
           <span>{{ $t('nav.home') }}</span>
         </el-menu-item>
 
+        <el-menu-item index="/calendar">
+          <i class="el-icon-date"></i>
+          <span>{{ $t('nav.calendar') }}</span>
+        </el-menu-item>
+
         <el-menu-item index="/equipment">
           <i class="el-icon-s-grid"></i>
           <span>{{ $t('nav.equipment') }}</span>
@@ -35,11 +40,6 @@
           <span>{{ $t('nav.reservation') }}</span>
         </el-menu-item>
 
-        <el-menu-item index="/calendar">
-          <i class="el-icon-date"></i>
-          <span>{{ $t('nav.calendar') }}</span>
-        </el-menu-item>
-
         <el-menu-item index="/admin/login">
           <i class="el-icon-s-custom"></i>
           <span>{{ $t('nav.admin') }}</span>
@@ -47,7 +47,10 @@
       </el-menu>
 
       <div class="mobile-nav-footer">
+        <div class="mobile-footer-controls">
+          <theme-switch class="mobile-theme-switch" />
         <language-switcher />
+        </div>
       </div>
     </div>
   </div>
@@ -55,12 +58,14 @@
 
 <script>
 import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
+import ThemeSwitch from '@/components/common/ThemeSwitch.vue'
 
 export default {
   name: 'MobileNav',
 
   components: {
-    LanguageSwitcher
+    LanguageSwitcher,
+    ThemeSwitch
   },
 
   data() {
@@ -197,6 +202,17 @@ export default {
   background-color: #263445;
   display: flex;
   justify-content: center;
+}
+
+.mobile-footer-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.mobile-theme-switch {
+  margin-right: 20px;
 }
 
 @media (max-width: 768px) {

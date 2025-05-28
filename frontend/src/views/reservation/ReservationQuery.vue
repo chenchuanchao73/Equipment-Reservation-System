@@ -54,8 +54,19 @@
         <div slot="header" style="font-size: 16px; font-weight: bold;">
           <i class="el-icon-document"></i>
           <span>{{ $t('reservation.queryResults') }}</span>
+          <span style="color: #909399; font-weight: normal; margin-left: 10px;">
+            ({{ $t('common.total') }} {{ totalResults }} {{ $t('common.items') }})
+          </span>
         </div>
-        <el-table :data="personalQueryResults" style="width: 100%" border stripe>
+        <!-- 桌面端表格视图 -->
+        <el-table
+          v-if="!isMobile"
+          :data="paginatedResults"
+          style="width: 100%"
+          border
+          stripe
+          v-loading="personalLoading"
+        >
           <el-table-column prop="reservation_code" :label="$t('reservation.code')" min-width="120" />
           <el-table-column prop="equipment_name" :label="$t('reservation.equipmentName')" min-width="120" />
           <el-table-column prop="start_datetime" :label="$t('reservation.startTime')" min-width="160" :formatter="formatDateTime" />
@@ -73,6 +84,69 @@
             </template>
           </el-table-column>
         </el-table>
+
+        <!-- 移动端卡片视图 -->
+        <div v-else class="mobile-card-container" v-loading="personalLoading">
+          <div
+            v-for="reservation in paginatedResults"
+            :key="reservation.reservation_code || reservation.id"
+            class="reservation-mobile-card"
+          >
+            <div class="card-header">
+              <div class="card-title">
+                <span class="equipment-name">{{ reservation.equipment_name }}</span>
+                <el-tag
+                  :type="getStatusType(reservation)"
+                  size="small"
+                  class="status-tag"
+                >
+                  {{ getStatusText(reservation) }}
+                </el-tag>
+              </div>
+              <div class="reservation-code">{{ reservation.reservation_code }}</div>
+            </div>
+
+            <div class="card-content">
+              <div class="time-info">
+                <div class="time-row">
+                  <i class="el-icon-time"></i>
+                  <span class="time-label">{{ $t('reservation.startTime') }}:</span>
+                  <span class="time-value">{{ formatDateTime(null, null, reservation.start_datetime) }}</span>
+                </div>
+                <div class="time-row">
+                  <i class="el-icon-time"></i>
+                  <span class="time-label">{{ $t('reservation.endTime') }}:</span>
+                  <span class="time-value">{{ formatDateTime(null, null, reservation.end_datetime) }}</span>
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <el-button
+                  type="primary"
+                  size="small"
+                  @click="viewReservationDetail(reservation)"
+                  class="view-button"
+                >
+                  <i class="el-icon-view"></i>
+                  {{ $t('common.view') }}
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分页组件 -->
+        <div class="pagination-container" v-if="totalResults > 0">
+          <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[10, 20, 50, 100]"
+            :page-size="pageSize"
+            :layout="paginationLayout"
+            :total="totalResults">
+          </el-pagination>
+        </div>
       </el-card>
     </div>
 
@@ -127,6 +201,11 @@ export default {
       },
       personalQueryResults: [], // 新增：存放多条预约结果
 
+      // 分页相关
+      currentPage: 1,
+      pageSize: 10,
+      totalResults: 0,
+
       personalQueryRules: {
         reservationCode: [
           { required: false, message: this.$t('reservation.requiredField'), trigger: 'blur' },
@@ -135,31 +214,67 @@ export default {
         userContact: [
           { required: false, message: this.$t('reservation.requiredField'), trigger: 'blur' }
         ]
-      }
+      },
+      // 响应式布局相关
+      isMobile: window.innerWidth <= 768
+    }
+  },
+
+  computed: {
+    // 分页后的结果
+    paginatedResults() {
+      const start = (this.currentPage - 1) * this.pageSize
+      const end = start + this.pageSize
+      return this.personalQueryResults.slice(start, end)
+    },
+
+    // 根据屏幕宽度动态调整分页组件布局
+    paginationLayout() {
+      return this.isMobile
+        ? 'prev, next'
+        : 'total, sizes, prev, pager, next, jumper';
     }
   },
 
   created() {
-    // 如果URL中有预定码参数，自动填充
+    // 如果URL中有查询参数，自动填充并查询
     const code = this.$route.query.code
+    const reservationCode = this.$route.query.reservationCode
     const userContact = this.$route.query.userContact
+    const autoQuery = this.$route.query.autoQuery
 
-    if (code) {
+    // 优先使用 reservationCode 参数（从详情页面返回时传递的）
+    if (reservationCode) {
+      this.personalQueryForm.reservationCode = reservationCode
+    } else if (code) {
       this.personalQueryForm.reservationCode = code
-      // 自动查询
-      this.$nextTick(() => {
-        this.handlePersonalQuery()
-      })
-    } else if (userContact) {
+    }
+
+    if (userContact) {
       this.personalQueryForm.userContact = userContact
-      // 自动查询
+    }
+
+    // 如果有 autoQuery 标记或者有查询参数，自动执行查询
+    if (autoQuery === 'true' || code || reservationCode || userContact) {
       this.$nextTick(() => {
         this.handlePersonalQuery()
       })
     }
+
+    // 添加窗口大小变化的监听器
+    window.addEventListener('resize', this.handleResize)
+  },
+
+  beforeDestroy() {
+    // 移除窗口大小变化的监听器
+    window.removeEventListener('resize', this.handleResize)
   },
 
   methods: {
+    // 处理窗口大小变化
+    handleResize() {
+      this.isMobile = window.innerWidth <= 768
+    },
 
     // 处理个人预约查询
     handlePersonalQuery() {
@@ -271,7 +386,7 @@ export default {
               // 这里需要调用后端接口根据联系方式查询预定
               const response = await reservationApi.getReservations({
                 user_contact: this.personalQueryForm.userContact,
-                limit: 50 // 查多一点
+                limit: 1000 // 设置一个足够大的limit来获取所有记录
               })
 
               if (response.data.items && response.data.items.length > 0) {
@@ -287,8 +402,10 @@ export default {
                   })
                   return
                 } else {
-                  // 多条，展示表格
+                  // 多条，展示表格并设置分页
                   this.personalQueryResults = response.data.items
+                  this.totalResults = response.data.items.length
+                  this.currentPage = 1 // 重置到第一页
                   return
                 }
               }
@@ -357,10 +474,37 @@ export default {
 
     // 重置表单
     resetForm() {
-      this.$refs.personalQueryForm.resetFields()
+      // 手动清空表单数据
+      this.personalQueryForm.reservationCode = ''
+      this.personalQueryForm.userContact = ''
+
+      // 重置表单验证状态
+      this.$refs.personalQueryForm.clearValidate()
+
       this.notFound = false
       this.showInstructions = true
       this.personalQueryResults = [] // 重置结果
+      this.totalResults = 0 // 重置总数
+      this.currentPage = 1 // 重置页码
+
+      // 清除URL参数，避免页面刷新时重新填充表单
+      if (this.$route.query.userContact || this.$route.query.reservationCode || this.$route.query.autoQuery) {
+        this.$router.replace({
+          path: this.$route.path,
+          query: {} // 清空所有查询参数
+        })
+      }
+    },
+
+    // 分页大小改变
+    handleSizeChange(newSize) {
+      this.pageSize = newSize
+      this.currentPage = 1 // 重置到第一页
+    },
+
+    // 当前页改变
+    handleCurrentChange(newPage) {
+      this.currentPage = newPage
     },
 
     // 查看预约详情
@@ -375,6 +519,7 @@ export default {
           // 构建查询参数
           const query = {
             userContact: this.personalQueryForm.userContact,
+            reservationCode: this.personalQueryForm.reservationCode, // 保留预定码
             from: 'query'
           };
 
@@ -404,6 +549,7 @@ export default {
             path: `/reservation/${reservation.reservation_code}`,
             query: {
               userContact: this.personalQueryForm.userContact,
+              reservationCode: this.personalQueryForm.reservationCode, // 保留预定码
               from: 'query'
             }
           });
@@ -416,6 +562,7 @@ export default {
               path: `/recurring-reservation/${response.data.data.recurring_id}`,
               query: {
                 userContact: this.personalQueryForm.userContact,
+                reservationCode: this.personalQueryForm.reservationCode, // 保留预定码
                 from: 'query'
               }
             });
@@ -503,6 +650,123 @@ export default {
   color: #606266;
 }
 
+/* 移动端卡片样式 */
+.mobile-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reservation-mobile-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e4e7ed;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.reservation-mobile-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  padding: 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.equipment-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.4;
+}
+
+.status-tag {
+  align-self: flex-start;
+  font-weight: 500;
+}
+
+.reservation-code {
+  font-size: 12px;
+  color: #409eff;
+  font-weight: 600;
+  margin-left: 12px;
+  background: #ecf5ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  border: 1px solid #b3d8ff;
+}
+
+.card-content {
+  padding: 16px;
+}
+
+.time-info {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.time-row:last-child {
+  margin-bottom: 0;
+}
+
+.time-row i {
+  color: #409eff;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.time-label {
+  color: #606266;
+  margin-right: 8px;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.time-value {
+  color: #303133;
+  font-weight: 500;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.view-button {
+  width: 100%;
+  font-weight: 500;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
 /* 表单提示样式 */
 .form-tip {
   font-size: 13px;
@@ -533,5 +797,11 @@ export default {
 /* 日期选择器样式 */
 .el-date-editor--daterange {
   width: 100% !important;
+}
+
+/* 分页容器样式 */
+.pagination-container {
+  margin-top: 20px;
+  text-align: center;
 }
 </style>

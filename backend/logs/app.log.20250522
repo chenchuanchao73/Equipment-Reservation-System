@@ -1,0 +1,4 @@
+2025-05-22 09:38:37,551 - root - INFO - FastAPI应用初始化中...
+2025-05-22 09:38:37,606 - backend.i18n - INFO - 国际化设置成功
+2025-05-22 09:38:37,991 - root - INFO - 应用启动 / Application started
+2025-05-22 09:38:37,993 - backend.database - ERROR - 数据库初始化失败: Foreign key associated with column 'reservation_history.reservation_id' could not find table 'reservations' with which to generate a foreign key to target column 'id'

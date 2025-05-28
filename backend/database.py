@@ -48,6 +48,9 @@ async def init_db():
         from backend.models.admin import Admin
         from backend.models.email import EmailSettings, EmailTemplate, EmailLog
         from backend.models.announcement import Announcement
+        from backend.models.equipment_time_slot import EquipmentTimeSlot
+        from backend.models.equipment_category import EquipmentCategory
+        from backend.models.system_log import SystemLog
 
         # 创建所有表
         Base.metadata.create_all(bind=engine)

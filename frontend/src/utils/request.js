@@ -23,7 +23,7 @@ console.log('Generated API URL:', apiBaseURL)
 // 创建axios实例
 const service = axios.create({
   baseURL: apiBaseURL,
-  timeout: 10000
+  timeout: 30000
 })
 
 console.log('API Base URL:', service.defaults.baseURL)

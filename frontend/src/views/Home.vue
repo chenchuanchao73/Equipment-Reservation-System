@@ -3,11 +3,21 @@
     <div class="banner">
       <h1>{{ $t('home.welcome') }}</h1>
       <p class="description">{{ $t('home.description') }}</p>
-      <!-- 移除重复按钮 -->
     </div>
 
     <div class="features">
       <el-row :gutter="30">
+        <el-col :xs="24" :sm="8">
+          <div class="feature-card">
+            <i class="el-icon-date feature-icon"></i>
+            <h3>{{ $t('home.calendarView') }}</h3>
+            <p>{{ $t('home.calendarViewDesc') }}</p>
+            <el-button type="danger" @click="goToCalendar">
+              <i class="el-icon-date"></i> {{ $t('home.viewCalendar') }} <i class="el-icon-arrow-right"></i>
+            </el-button>
+          </div>
+        </el-col>
+
         <el-col :xs="24" :sm="8">
           <div class="feature-card">
             <i class="el-icon-view feature-icon"></i>
@@ -30,16 +40,6 @@
           </div>
         </el-col>
 
-        <el-col :xs="24" :sm="8">
-          <div class="feature-card">
-            <i class="el-icon-date feature-icon"></i>
-            <h3>{{ $t('home.calendarView') }}</h3>
-            <p>{{ $t('home.calendarViewDesc') }}</p>
-            <el-button type="warning" @click="goToCalendar">
-              <i class="el-icon-date"></i> {{ $t('home.viewCalendar') }} <i class="el-icon-arrow-right"></i>
-            </el-button>
-          </div>
-        </el-col>
       </el-row>
     </div>
 
@@ -121,13 +121,26 @@
 
       <!-- 查询结果 -->
       <div v-if="reservations.length > 0" class="query-results">
+        <!-- 查询结果标题 -->
+        <div class="query-results-header">
+          <h3>
+            <i class="el-icon-document"></i>
+            <span>{{ $t('home.queryResults') }}</span>
+            <span class="results-count">
+              ({{ $t('common.total') }} {{ reservations.length }} {{ $t('common.items') }})
+            </span>
+          </h3>
+        </div>
+
+        <!-- 桌面端表格视图 -->
         <el-table
+          v-if="!isMobile"
           :data="paginatedReservations"
           style="width: 100%"
-          :default-sort="{ prop: 'id', order: 'descending' }"
           v-loading="loading"
           border
           stripe
+          @sort-change="handleSortChange"
         >
           <el-table-column
             prop="id"
@@ -180,6 +193,7 @@
             prop="status"
             :label="$t('common.status')"
             width="140"
+            sortable
           >
             <template slot-scope="scope">
               <el-tag
@@ -193,6 +207,59 @@
           </el-table-column>
         </el-table>
 
+        <!-- 移动端卡片视图 -->
+        <div v-else class="mobile-card-container" v-loading="loading">
+          <div
+            v-for="reservation in paginatedReservations"
+            :key="reservation.id"
+            class="reservation-mobile-card"
+          >
+            <div class="card-header">
+              <div class="card-title">
+                <span class="equipment-name">{{ reservation.equipment_name }}</span>
+                <el-tag
+                  :type="getStatusType(reservation)"
+                  size="small"
+                  class="status-tag"
+                >
+                  {{ getStatusText(reservation) }}
+                </el-tag>
+              </div>
+              <div class="reservation-id">#{{ reservation.id }}</div>
+            </div>
+
+            <div class="card-content">
+              <div class="info-row">
+                <span class="label">{{ $t('equipment.category') }}:</span>
+                <span class="value">{{ reservation.equipment_category }}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label">{{ $t('reservation.reserver') }}:</span>
+                <span class="value">{{ reservation.user_name }}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label">{{ $t('reservation.department') }}:</span>
+                <span class="value">{{ reservation.user_department }}</span>
+              </div>
+
+              <div class="time-info">
+                <div class="time-row">
+                  <i class="el-icon-time"></i>
+                  <span class="time-label">{{ $t('reservation.startTime') }}:</span>
+                  <span class="time-value">{{ formatDateTime(null, null, reservation.start_datetime) }}</span>
+                </div>
+                <div class="time-row">
+                  <i class="el-icon-time"></i>
+                  <span class="time-label">{{ $t('reservation.endTime') }}:</span>
+                  <span class="time-value">{{ formatDateTime(null, null, reservation.end_datetime) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 分页控件 -->
         <div class="pagination-container">
           <el-pagination
@@ -201,7 +268,7 @@
             :current-page="currentPage"
             :page-sizes="[5, 10, 20, 50]"
             :page-size="pageSize"
-            layout="total, sizes, prev, pager, next, jumper"
+            :layout="paginationLayout"
             :total="reservations.length"
           >
           </el-pagination>
@@ -242,6 +309,8 @@ export default {
       pageSize: 10,
       // 公告数据
       announcements: [],
+      // 响应式布局相关
+      isMobile: window.innerWidth <= 768
     }
   },
 
@@ -251,6 +320,13 @@ export default {
       const startIndex = (this.currentPage - 1) * this.pageSize;
       const endIndex = startIndex + this.pageSize;
       return this.reservations.slice(startIndex, endIndex);
+    },
+
+    // 根据屏幕宽度动态调整分页组件布局
+    paginationLayout() {
+      return this.isMobile
+        ? 'prev, next'
+        : 'total, sizes, prev, pager, next, jumper';
     }
   },
 
@@ -260,9 +336,22 @@ export default {
 
     // 默认加载公开查询数据
     this.handleQuery()
+
+    // 添加窗口大小变化的监听器
+    window.addEventListener('resize', this.handleResize)
+  },
+
+  beforeDestroy() {
+    // 移除窗口大小变化的监听器
+    window.removeEventListener('resize', this.handleResize)
   },
 
   methods: {
+    // 处理窗口大小变化
+    handleResize() {
+      this.isMobile = window.innerWidth <= 768
+    },
+
     goToEquipment() {
       this.$router.push('/equipment')
     },
@@ -355,9 +444,8 @@ export default {
           });
         }
 
-        // 按照ID降序排序，使最新的预约显示在前面
-        reservations.sort((a, b) => b.id - a.id);
-        console.log(`按ID降序排序后的预约数量: ${reservations.length}`);
+        // 默认按状态优先级排序
+        this.sortByStatus(reservations);
 
         this.reservations = reservations
       } catch (error) {
@@ -367,6 +455,32 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+
+    // 按状态优先级排序
+    sortByStatus(reservations) {
+      reservations.sort((a, b) => {
+        // 按状态优先级排序
+        const priorityMap = {
+          'in_use': 4,      // 使用中 - 最高优先级
+          'confirmed': 3,   // 已确认 - 次高优先级
+          'expired': 2,     // 已过期 - 较低优先级
+          'cancelled': 1,   // 已取消 - 最低优先级
+        };
+
+        const priorityA = priorityMap[a.status] || 0;
+        const priorityB = priorityMap[b.status] || 0;
+
+        // 如果优先级不同，按优先级降序排序
+        if (priorityA !== priorityB) {
+          return priorityB - priorityA;
+        }
+
+        // 如果优先级相同，按ID降序排序
+        return b.id - a.id;
+      });
+
+      console.log(`按状态优先级排序后的预约数量: ${reservations.length}`);
     },
 
     // 重置查询表单
@@ -429,6 +543,62 @@ export default {
     // 处理页码变化
     handleCurrentChange(page) {
       this.currentPage = page;
+    },
+
+    // 处理表格排序变化
+    handleSortChange(column) {
+      if (!column.prop) return;
+
+      if (column.prop === 'id') {
+        // 按ID排序
+        this.reservations.sort((a, b) => {
+          if (column.order === 'ascending') {
+            return a.id - b.id;  // 升序
+          } else {
+            return b.id - a.id;  // 降序
+          }
+        });
+      } else if (column.prop === 'start_datetime' || column.prop === 'end_datetime') {
+        // 按日期排序
+        this.reservations.sort((a, b) => {
+          const dateA = new Date(a[column.prop]);
+          const dateB = new Date(b[column.prop]);
+
+          if (column.order === 'ascending') {
+            return dateA - dateB;  // 升序
+          } else {
+            return dateB - dateA;  // 降序
+          }
+        });
+      } else if (column.prop === 'status') {
+        // 按状态排序
+        if (column.order === 'ascending') {
+          // 升序：已取消 > 已过期 > 已确认 > 使用中
+          this.reservations.sort((a, b) => {
+            const priorityMap = {
+              'cancelled': 4,   // 已取消 - 升序时最高
+              'expired': 3,     // 已过期
+              'confirmed': 2,   // 已确认
+              'in_use': 1,      // 使用中 - 升序时最低
+            };
+
+            const priorityA = priorityMap[a.status] || 0;
+            const priorityB = priorityMap[b.status] || 0;
+
+            if (priorityA !== priorityB) {
+              return priorityB - priorityA;
+            }
+
+            return b.id - a.id;  // 相同状态按ID降序
+          });
+        } else {
+          // 降序：使用中 > 已确认 > 已过期 > 已取消
+          this.sortByStatus(this.reservations);
+        }
+      }
+
+      // 重置当前页为第一页
+      this.currentPage = 1;
     },
   }
 }
@@ -543,6 +713,33 @@ export default {
   margin-top: 20px;
 }
 
+.query-results-header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.query-results-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #303133;
+  display: flex;
+  align-items: center;
+}
+
+.query-results-header h3 i {
+  margin-right: 8px;
+  color: #409eff;
+}
+
+.results-count {
+  color: #909399;
+  font-weight: normal;
+  margin-left: 10px;
+  font-size: 14px;
+}
+
 .pagination-container {
   margin-top: 20px;
   text-align: center;
@@ -553,9 +750,146 @@ export default {
   text-align: center;
 }
 
+/* 移动端卡片样式 */
+.mobile-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reservation-mobile-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e4e7ed;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.reservation-mobile-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  padding: 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.equipment-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.4;
+}
+
+.status-tag {
+  align-self: flex-start;
+  font-weight: 500;
+}
+
+.reservation-id {
+  font-size: 14px;
+  color: #409eff;
+  font-weight: 600;
+  margin-left: 12px;
+  background: #ecf5ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  border: 1px solid #b3d8ff;
+}
+
+.card-content {
+  padding: 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-of-type {
+  border-bottom: none;
+  margin-bottom: 16px;
+}
+
+.info-row .label {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.info-row .value {
+  font-size: 14px;
+  color: #303133;
+  text-align: right;
+  word-break: break-word;
+}
+
+.time-info {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.time-row:last-child {
+  margin-bottom: 0;
+}
+
+.time-row i {
+  color: #409eff;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.time-label {
+  color: #606266;
+  margin-right: 8px;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.time-value {
+  color: #303133;
+  font-weight: 500;
+}
+
 @media (max-width: 768px) {
+  /* 移动端整体容器优化 - 与个人预约管理页面一致 */
+  .home-container {
+    padding: 10px 4px !important; /* 进一步减少左右边距 */
+  }
+
+  /* Banner 横幅优化 - 更宽的显示 */
   .banner {
-    padding: 20px;
+    padding: 20px 8px; /* 进一步减少左右内边距 */
+    margin: 0 -20px 20px -20px; /* 更大的负边距让banner更宽 */
+    border-radius: 4px; /* 进一步减小圆角 */
   }
 
   .banner h1 {
@@ -564,24 +898,83 @@ export default {
 
   .description {
     font-size: 1rem;
+    padding: 0 4px; /* 减少描述文字内边距 */
   }
 
   .banner-buttons {
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    padding: 0 4px; /* 减少按钮内边距 */
+  }
+
+  /* Feature Cards 功能卡片优化 - 更宽的显示 */
+  .features .el-row {
+    margin: 0 -22px !important; /* 更大的负边距让卡片行更宽 */
+  }
+
+  .features .el-col {
+    padding: 0 2px !important; /* 进一步减少列间距 */
   }
 
   .feature-card {
+    margin-bottom: 16px;
+    padding: 20px 12px; /* 进一步减少左右内边距 */
+    border-radius: 4px; /* 进一步减小圆角 */
+  }
+
+  .feature-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 3rem; /* 稍微减小图标大小 */
+    padding: 15px;
+  }
+
+  .feature-card h3 {
+    font-size: 1.4rem; /* 稍微减小标题字体 */
+  }
+
+  .feature-card p {
+    font-size: 1rem; /* 稍微减小描述字体 */
     margin-bottom: 20px;
   }
 
+  /* Public Query Section 查询区域优化 - 更宽的显示 */
   .public-query-section {
-    padding: 15px;
+    padding: 16px 8px; /* 进一步减少左右内边距 */
+    margin: 0 -20px 20px -20px; /* 更大的负边距让查询区域更宽 */
+    border-radius: 4px; /* 进一步减小圆角 */
   }
 
   .public-query-section h2 {
     font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  /* 查询表单优化 */
+  .query-form .el-row {
+    margin: 0 -2px !important; /* 进一步减少表单行边距 */
+  }
+
+  .query-form .el-col {
+    padding: 0 2px !important; /* 进一步减少表单列间距 */
+  }
+
+  /* 移动端卡片容器优化 - 与个人预约管理页面一致 */
+  .mobile-card-container {
+    margin: 0 -2px; /* 更小的负边距，与个人预约管理页面一致 */
+    gap: 16px; /* 保持与个人预约管理页面一致的间距 */
+  }
+
+  .reservation-mobile-card {
+    margin: 0 2px; /* 给卡片更小的边距 */
+    border-radius: 8px; /* 与个人预约管理页面保持一致的圆角 */
+  }
+
+  /* 分页容器优化 */
+  .pagination-container {
+    margin: 16px -8px 0 -8px; /* 更大的负边距让分页区域更宽 */
+    padding: 0 4px; /* 减少分页内容内边距 */
   }
 }
 </style>

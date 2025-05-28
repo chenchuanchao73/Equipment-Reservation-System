@@ -142,18 +142,22 @@ export const reservationApi = {
           reservationNumberStr = String(reservationNumber.reservation_number);
           console.log(`从对象中提取预约序号: ${reservationNumberStr}`);
         } else {
-          console.warn('无法从对象中提取预约序号，尝试使用整个对象');
-          try {
-            // 尝试将对象转换为字符串
-            reservationNumberStr = JSON.stringify(reservationNumber);
-            console.log(`将对象序列化为JSON: ${reservationNumberStr}`);
-          } catch (e) {
-            console.error('序列化对象失败:', e);
-          }
+          console.warn('预约序号参数是对象但没有reservation_number字段，忽略此参数');
+          // 不再序列化整个对象，直接忽略
+          reservationNumberStr = '';
+        }
+      } else if (typeof reservationNumber === 'string' && reservationNumber.trim()) {
+        // 确保是有效的预约序号格式（通常以RN-开头）
+        if (reservationNumber.startsWith('RN-') || reservationNumber.match(/^[A-Z0-9-]+$/)) {
+          reservationNumberStr = reservationNumber.trim();
+          console.log(`预约序号参数是字符串类型: ${reservationNumberStr}`);
+        } else {
+          console.warn(`预约序号格式不正确，忽略: ${reservationNumber}`);
+          reservationNumberStr = '';
         }
       } else {
-        reservationNumberStr = String(reservationNumber);
-        console.log(`预约序号参数是${typeof reservationNumber}类型: ${reservationNumber}`);
+        console.warn(`预约序号参数类型不支持: ${typeof reservationNumber}, 值: ${reservationNumber}`);
+        reservationNumberStr = '';
       }
 
       if (reservationNumberStr) {
@@ -167,8 +171,35 @@ export const reservationApi = {
   },
 
   // 更新预定
-  updateReservation(code, data) {
-    return axios.put(`/api/reservation/code/${code}`, data)
+  updateReservation(code, data, reservationNumber = null) {
+    if (reservationNumber) {
+      // 如果提供了预约序号，使用专门的预约序号API
+      return axios.put(`/api/reservation/number/${reservationNumber}`, data)
+    } else {
+      // 否则使用原有的预约码API
+      return axios.put(`/api/reservation/code/${code}`, data)
+    }
+  },
+
+  // 通过预约序号更新预定
+  updateReservationByNumber(reservationNumber, data) {
+    return axios.put(`/api/reservation/number/${reservationNumber}`, data)
+  },
+
+  // 通过预约码更新预定（支持预约序号参数）
+  updateReservationByCode(code, data, reservationNumber = null) {
+    const params = reservationNumber ? { reservation_number: reservationNumber } : {}
+    return axios.put(`/api/reservation/code/${code}`, data, { params })
+  },
+
+  // 通过预约码获取预定详情（支持查询参数）
+  getReservationByCodeWithParams(code, params = {}) {
+    // 添加时间戳参数，防止缓存
+    const timestamp = new Date().getTime()
+    const queryParams = { ...params, _t: timestamp }
+
+    console.log(`通过预约码获取预定详情（带参数）: ${code}`, queryParams)
+    return axios.get(`/api/reservation/code/${code}`, { params: queryParams })
   },
 
   // 取消预定
@@ -179,6 +210,27 @@ export const reservationApi = {
   // 获取预定二维码
   getReservationQrcode(code) {
     return axios.get(`/api/reservation/qrcode/${code}`)
+  },
+
+  // 获取预定历史记录
+  getReservationHistory(code, reservationNumber = null) {
+    // 添加时间戳参数，防止缓存
+    const timestamp = new Date().getTime()
+    let url = `/api/reservation/code/${code}/history?_t=${timestamp}`
+
+    // 如果提供了预约序号，添加到URL中
+    if (reservationNumber) {
+      url += `&reservation_number=${encodeURIComponent(reservationNumber)}`
+    }
+
+    return axios.get(url)
+  },
+
+  // 导出预定数据
+  exportReservations(exportData) {
+    return axios.post('/api/reservation/export', exportData, {
+      responseType: 'blob' // 重要：设置响应类型为blob以处理文件下载
+    })
   }
 }
 
@@ -289,22 +341,22 @@ export const announcementApi = {
   getAnnouncements(params) {
     return axios.get('/api/announcements', { params })
   },
-  
+
   // 获取单个公告
   getAnnouncement(id) {
     return axios.get(`/api/announcements/${id}`)
   },
-  
+
   // 创建公告
   createAnnouncement(data) {
     return axios.post('/api/announcements', data)
   },
-  
+
   // 更新公告
   updateAnnouncement(id, data) {
     return axios.put(`/api/announcements/${id}`, data)
   },
-  
+
   // 删除公告
   deleteAnnouncement(id) {
     return axios.delete(`/api/announcements/${id}`)
