@@ -167,6 +167,14 @@ python start.py
 
 ### 📱 界面预览 | Interface Preview
 
+
+![1](https://github.com/user-attachments/assets/e2c68aba-98f7-4897-835a-425958494853)
+![2](https://github.com/user-attachments/assets/071522db-1f35-42b4-bea1-93c200a27f6b)
+![3](https://github.com/user-attachments/assets/37340453-7269-4dbb-a45c-8b69f828f395)
+![4](https://github.com/user-attachments/assets/f1dacaee-8163-426a-a189-cec7f6e37015)
+
+
+
 <table>
 <tr>
 <td width="50%">
