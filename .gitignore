@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+*.egg-info/
+.venv/
+.env
+
+# Node.js
+frontend/node_modules/
+package-lock.json
+yarn.lock
+
+# Logs
+backend/logs/
+*.log
