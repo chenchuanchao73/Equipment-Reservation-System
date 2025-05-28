@@ -51,10 +51,6 @@
 
 ## 🛠️ 技术栈 | Technology Stack
 
-<table>
-<tr>
-<td width="50%">
-
 ### 前端 (Frontend)
 
 - **框架**: Vue.js 2.x
@@ -77,6 +73,10 @@
 - **邮件支持**: aiosmtplib
 - **日志系统**: concurrent-log-handler
 
+
+<table>
+<tr>
+<td width="50%">
 
 ## 🚀 快速开始 | Quick Start
 
