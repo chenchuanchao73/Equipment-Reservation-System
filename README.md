@@ -309,6 +309,8 @@ git commit -m "docs: 更新API文档"
 
 ### 🛠️ 技术致谢 | Technical Acknowledgments
 
+- [Cursor](https://cursor.com) - 代码的整体逻辑与计划
+- [Augment Code](https://app.augmentcode.com) - 代码的完整书写与修改
 - [Vue.js](https://vuejs.org/) - 渐进式JavaScript框架
 - [FastAPI](https://fastapi.tiangolo.com/) - 现代高性能Web框架
 - [Element UI](https://element.eleme.io/) - 企业级UI组件库
@@ -318,11 +320,11 @@ git commit -m "docs: 更新API文档"
 
 <div align="center">
 
-**⭐ 如果这个项目对您有帮助，请给我们一个星标！**
+**⭐ 如果这个项目对您有帮助，请给我一个星标！**
 
-*⭐ If this project helps you, please give us a star!*
+*⭐ If this project helps you, please give me a star!*
 
-**📧 联系我们 | Contact Us**: [chen.chuanchao@htschools.org]
+**📧 联系我吧 | Contact Us**: [chen.chuanchao@htschools.org]
 
 ---
 
