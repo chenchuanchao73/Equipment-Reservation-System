@@ -423,6 +423,25 @@ def get_reservations(
         else:
             logger.debug(f"预约 ID={reservation.id} 的预约序号: {reservation.reservation_number}")
 
+        # 检查并修复字段混淆问题
+        # 如果 reservation_code 是预约序号格式，但应该是预约码
+        if (reservation.reservation_code and reservation.reservation_code.startswith('RN-') and
+            reservation.reservation_number and reservation.reservation_number.startswith('RN-') and
+            reservation.reservation_code == reservation.reservation_number):
+            logger.warning(f"检测到预约 ID={reservation.id} 的字段混淆: reservation_code={reservation.reservation_code} 与 reservation_number={reservation.reservation_number} 相同")
+            # 这种情况下，需要重新生成预约码
+            from backend.utils.code_generator import generate_reservation_code
+            new_code = generate_reservation_code()
+            logger.info(f"为预约 ID={reservation.id} 重新生成预约码: {new_code}")
+            reservation.reservation_code = new_code
+            # 保存到数据库
+            try:
+                db.commit()
+                logger.info(f"成功修复预约 ID={reservation.id} 的字段混淆问题")
+            except Exception as e:
+                logger.error(f"修复字段混淆失败: {str(e)}")
+                db.rollback()
+
     return reservations
 
 def get_reservation_count(
