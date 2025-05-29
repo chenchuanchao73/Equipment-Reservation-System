@@ -403,8 +403,33 @@ export default {
                   return
                 } else {
                   // 多条，展示表格并设置分页
-                  this.personalQueryResults = response.data.items
-                  this.totalResults = response.data.items.length
+                  console.log('查询到多条预约结果，检查数据结构:', response.data.items);
+
+                  // 检查并修复数据中的字段混淆问题
+                  const fixedItems = response.data.items.map(item => {
+                    console.log('原始预约数据:', {
+                      id: item.id,
+                      reservation_code: item.reservation_code,
+                      reservation_number: item.reservation_number
+                    });
+
+                    // 如果 reservation_code 是预约序号格式，但 reservation_number 为空或不正确
+                    if (item.reservation_code && item.reservation_code.startsWith('RN-') &&
+                        (!item.reservation_number || !item.reservation_number.startsWith('RN-'))) {
+                      console.log('检测到数据字段混淆，进行修复:', item.reservation_code);
+                      // 这种情况下，reservation_code 实际上是 reservation_number
+                      return {
+                        ...item,
+                        reservation_number: item.reservation_code,
+                        // 保持原有的 reservation_code，如果它确实是预约序号，后续逻辑会处理
+                      };
+                    }
+
+                    return item;
+                  });
+
+                  this.personalQueryResults = fixedItems
+                  this.totalResults = fixedItems.length
                   this.currentPage = 1 // 重置到第一页
                   return
                 }
@@ -510,6 +535,13 @@ export default {
     // 查看预约详情
     async viewReservationDetail(reservation) {
       console.log('查看预约详情:', reservation);
+      console.log('预约详情字段分析:', {
+        id: reservation.id,
+        reservation_code: reservation.reservation_code,
+        reservation_number: reservation.reservation_number,
+        reservation_code_type: reservation.reservation_code ? (reservation.reservation_code.startsWith('RN-') ? '预约序号格式' : '预约码格式') : '空',
+        reservation_number_type: reservation.reservation_number ? (reservation.reservation_number.startsWith('RN-') ? '预约序号格式' : '其他格式') : '空'
+      });
 
       try {
         // 检查是否有预约序号，如果有，说明是子预约，直接跳转到子预约详情页面
@@ -532,6 +564,32 @@ export default {
           // 跳转到子预约详情页面
           this.$router.push({
             path: `/reservation/number/${reservation.reservation_number}`,
+            query: query
+          });
+
+          return;
+        }
+
+        // 检查 reservation_code 是否实际上是预约序号（以RN-开头）
+        if (reservation.reservation_code && reservation.reservation_code.startsWith('RN-')) {
+          console.log('检测到reservation_code实际上是预约序号，直接跳转到子预约详情页面:', reservation.reservation_code);
+
+          // 构建查询参数
+          const query = {
+            userContact: this.personalQueryForm.userContact,
+            reservationCode: this.personalQueryForm.reservationCode, // 保留预定码
+            from: 'query'
+          };
+
+          // 如果有循环预约ID，添加到查询参数中
+          if (reservation.recurring_reservation_id) {
+            query.recurringId = reservation.recurring_reservation_id;
+            query.child = 'true';
+          }
+
+          // 跳转到子预约详情页面，使用reservation_code作为预约序号
+          this.$router.push({
+            path: `/reservation/number/${reservation.reservation_code}`,
             query: query
           });
 
