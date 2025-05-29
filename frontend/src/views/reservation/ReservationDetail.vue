@@ -491,21 +491,9 @@ export default {
             // 如果URL中没有预约码，直接使用预约序号查询
             console.log('直接使用预约序号查询:', reservationNumber)
 
-            // 从localStorage中获取预约码（如果有）
-            const savedCode = localStorage.getItem('current_reservation_code')
-
-            if (savedCode) {
-              console.log('从localStorage中获取到预约码:', savedCode)
-
-              // 直接使用预约序号作为参数，不要包装在对象中
-              console.log('使用保存的预约码和预约序号查询:', savedCode, reservationNumber);
-
-              // 使用预约码和预约序号查询
-              response = await reservationApi.getReservationByCode(savedCode, reservationNumber)
-            } else {
-              // 如果没有预约码，直接使用预约序号查询
-              response = await reservationApi.getReservationByCode(reservationNumber)
-            }
+            // 对于预约序号查询，直接使用专门的API，不依赖localStorage
+            console.log('使用专门的预约序号API查询:', reservationNumber);
+            response = await reservationApi.getReservationByNumber(reservationNumber)
           }
         } else if (this.isAdmin) {
           // 管理员查询
