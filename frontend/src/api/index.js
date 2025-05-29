@@ -170,6 +170,16 @@ export const reservationApi = {
     return axios.get(url)
   },
 
+  // 通过预约序号获取预定详情
+  getReservationByNumber(reservationNumber) {
+    // 添加时间戳参数，防止缓存
+    const timestamp = new Date().getTime()
+    const url = `/api/reservation/number/${reservationNumber}?_t=${timestamp}`
+
+    console.log(`通过预约序号获取预约详情URL: ${url}`)
+    return axios.get(url)
+  },
+
   // 更新预定
   updateReservation(code, data, reservationNumber = null) {
     if (reservationNumber) {
@@ -373,3 +383,4 @@ export const api = {
   admin: adminApi,
   announcement: announcementApi
 }
+
