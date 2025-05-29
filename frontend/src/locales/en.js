@@ -2,7 +2,7 @@ export default {
   // Common
   common: {
     appName: 'Equipment Reservation System',
-    fullAppName: 'HTNIA Equipment Reservation System',
+    fullAppName: 'Equipment Reservation System',
     loading: 'Loading...',
     success: 'Success',
     downloadSuccess: 'Download successful',
