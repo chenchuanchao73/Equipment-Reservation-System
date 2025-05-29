@@ -2,7 +2,7 @@ export default {
   // 通用
   common: {
     appName: '设备预定系统',
-    fullAppName: 'HTNIA设备预定系统',
+    fullAppName: '设备预定系统',
     loading: '加载中...',
     success: '成功',
     downloadSuccess: '下载成功',
