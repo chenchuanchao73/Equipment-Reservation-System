@@ -194,6 +194,14 @@ python start.py
 ![2](https://github.com/user-attachments/assets/071522db-1f35-42b4-bea1-93c200a27f6b)
 ![3](https://github.com/user-attachments/assets/37340453-7269-4dbb-a45c-8b69f828f395)
 ![4](https://github.com/user-attachments/assets/f1dacaee-8163-426a-a189-cec7f6e37015)
+![image](https://github.com/user-attachments/assets/e8621514-49bb-48d7-af76-f7f3c32e057c)
+![image](https://github.com/user-attachments/assets/9168431c-c036-4220-bdef-f2c09a3c38b6)
+![image](https://github.com/user-attachments/assets/711c6d17-af35-4f73-bf2a-372f4dbdd17b)
+![image](https://github.com/user-attachments/assets/74df1d04-1f3e-475e-9997-75dc1b5ce222)
+![image](https://github.com/user-attachments/assets/93fa10b6-a02e-44c8-b113-1ec5bd03b460)
+![image](https://github.com/user-attachments/assets/c94e37be-aa19-4abe-ab15-585ef89fb7c7)
+![image](https://github.com/user-attachments/assets/e04e3cb9-369b-42ff-9d0b-fe7447620041)
+![image](https://github.com/user-attachments/assets/dce13a5c-8638-419a-b770-603811de7d84)
 
 
 
